@@ -65,7 +65,7 @@ func main() {
 	server.Use(middleware.CORSMiddleware())
 
 	// add ping
-	server.GET("/ping", func(c *gin.Context) {
+	server.GET("/api/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
