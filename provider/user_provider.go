@@ -1,9 +1,9 @@
 package provider
 
 import (
-	"github.com/Caknoooo/go-gin-clean-starter/controller"
-	"github.com/Caknoooo/go-gin-clean-starter/repository"
-	"github.com/Caknoooo/go-gin-clean-starter/service"
+	"github.com/miraicantsleep/myits-event-be/controller"
+	"github.com/miraicantsleep/myits-event-be/repository"
+	"github.com/miraicantsleep/myits-event-be/service"
 	"github.com/samber/do"
 	"gorm.io/gorm"
 )

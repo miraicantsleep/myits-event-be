@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Caknoooo/go-gin-clean-starter/dto"
-	"github.com/Caknoooo/go-gin-clean-starter/service"
-	"github.com/Caknoooo/go-gin-clean-starter/utils"
+	"github.com/miraicantsleep/myits-event-be/dto"
+	"github.com/miraicantsleep/myits-event-be/service"
+	"github.com/miraicantsleep/myits-event-be/utils"
 	"github.com/gin-gonic/gin"
 )
 

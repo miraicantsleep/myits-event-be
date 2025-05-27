@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"github.com/Caknoooo/go-gin-clean-starter/constants"
-	"github.com/Caknoooo/go-gin-clean-starter/controller"
-	"github.com/Caknoooo/go-gin-clean-starter/middleware"
-	"github.com/Caknoooo/go-gin-clean-starter/service"
+	"github.com/miraicantsleep/myits-event-be/constants"
+	"github.com/miraicantsleep/myits-event-be/controller"
+	"github.com/miraicantsleep/myits-event-be/middleware"
+	"github.com/miraicantsleep/myits-event-be/service"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/do"
 )

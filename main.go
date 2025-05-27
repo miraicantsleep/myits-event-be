@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/Caknoooo/go-gin-clean-starter/command"
-	"github.com/Caknoooo/go-gin-clean-starter/middleware"
-	"github.com/Caknoooo/go-gin-clean-starter/provider"
-	"github.com/Caknoooo/go-gin-clean-starter/routes"
+	"github.com/miraicantsleep/myits-event-be/command"
+	"github.com/miraicantsleep/myits-event-be/middleware"
+	"github.com/miraicantsleep/myits-event-be/provider"
+	"github.com/miraicantsleep/myits-event-be/routes"
 	"github.com/samber/do"
 
 	"github.com/common-nighthawk/go-figure"

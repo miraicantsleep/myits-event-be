@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Caknoooo/go-gin-clean-starter/constants"
-	"github.com/Caknoooo/go-gin-clean-starter/dto"
-	"github.com/Caknoooo/go-gin-clean-starter/entity"
-	"github.com/Caknoooo/go-gin-clean-starter/helpers"
-	"github.com/Caknoooo/go-gin-clean-starter/repository"
-	"github.com/Caknoooo/go-gin-clean-starter/utils"
+	"github.com/miraicantsleep/myits-event-be/constants"
+	"github.com/miraicantsleep/myits-event-be/dto"
+	"github.com/miraicantsleep/myits-event-be/entity"
+	"github.com/miraicantsleep/myits-event-be/helpers"
+	"github.com/miraicantsleep/myits-event-be/repository"
+	"github.com/miraicantsleep/myits-event-be/utils"
 	"github.com/google/uuid"
 )
 

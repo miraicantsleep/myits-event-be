@@ -1,4 +1,4 @@
-module github.com/Caknoooo/go-gin-clean-starter
+module github.com/miraicantsleep/myits-event-be
 
 go 1.23.0
 

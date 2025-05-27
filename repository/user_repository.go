@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/Caknoooo/go-gin-clean-starter/dto"
-	"github.com/Caknoooo/go-gin-clean-starter/entity"
+	"github.com/miraicantsleep/myits-event-be/dto"
+	"github.com/miraicantsleep/myits-event-be/entity"
 	"gorm.io/gorm"
 )
 

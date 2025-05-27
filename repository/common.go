@@ -3,7 +3,7 @@ package repository
 import (
 	"math"
 
-	"github.com/Caknoooo/go-gin-clean-starter/dto"
+	"github.com/miraicantsleep/myits-event-be/dto"
 	"gorm.io/gorm"
 )
 
