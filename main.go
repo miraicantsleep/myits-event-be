@@ -64,6 +64,13 @@ func main() {
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
 
+	// add ping
+	server.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
 	// routes
 	routes.RegisterRoutes(server, injector)
 
