@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/miraicantsleep/myits-event-be/constants"
 	"github.com/miraicantsleep/myits-event-be/dto"
 	"github.com/miraicantsleep/myits-event-be/entity"
 	"github.com/miraicantsleep/myits-event-be/helpers"
@@ -69,7 +68,7 @@ func (s *userService) Register(ctx context.Context, req dto.UserCreateRequest) (
 
 	user := entity.User{
 		Name:     req.Name,
-		Role:     constants.ENUM_ROLE_USER,
+		Role:     entity.UserRole(req.Role), // This is **absolutely not recommended** in a real life application
 		Email:    req.Email,
 		Password: req.Password,
 	}
@@ -82,7 +81,7 @@ func (s *userService) Register(ctx context.Context, req dto.UserCreateRequest) (
 	return dto.UserResponse{
 		ID:    userReg.ID.String(),
 		Name:  userReg.Name,
-		Role:  userReg.Role,
+		Role:  string(userReg.Role),
 		Email: userReg.Email,
 	}, nil
 }
@@ -102,7 +101,7 @@ func (s *userService) GetAllUserWithPagination(
 			ID:    user.ID.String(),
 			Name:  user.Name,
 			Email: user.Email,
-			Role:  user.Role,
+			Role:  string(user.Role),
 		}
 
 		datas = append(datas, data)
@@ -128,7 +127,7 @@ func (s *userService) GetUserById(ctx context.Context, userId string) (dto.UserR
 	return dto.UserResponse{
 		ID:    user.ID.String(),
 		Name:  user.Name,
-		Role:  user.Role,
+		Role:  string(user.Role),
 		Email: user.Email,
 	}, nil
 }
@@ -142,7 +141,7 @@ func (s *userService) GetUserByEmail(ctx context.Context, email string) (dto.Use
 	return dto.UserResponse{
 		ID:    emails.ID.String(),
 		Name:  emails.Name,
-		Role:  emails.Role,
+		Role:  string(emails.Role),
 		Email: emails.Email,
 	}, nil
 }
@@ -171,7 +170,7 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 	return dto.UserUpdateResponse{
 		ID:    userUpdate.ID.String(),
 		Name:  userUpdate.Name,
-		Role:  userUpdate.Role,
+		Role:  string(userUpdate.Role),
 		Email: userUpdate.Email,
 	}, nil
 }
@@ -209,10 +208,10 @@ func (s *userService) Verify(ctx context.Context, req dto.UserLoginRequest) (dto
 		return dto.TokenResponse{}, errors.New("invalid email or password")
 	}
 
-	accessToken := s.jwtService.GenerateAccessToken(user.ID.String(), user.Role)
+	accessToken := s.jwtService.GenerateAccessToken(user.ID.String(), string(user.Role))
 
 	return dto.TokenResponse{
 		AccessToken: accessToken,
-		Role:        user.Role,
+		Role:        string(user.Role),
 	}, nil
 }

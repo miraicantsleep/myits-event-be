@@ -6,12 +6,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type UserRole string
+
+const (
+	RoleUser       UserRole = "user"
+	RoleDepartemen UserRole = "departemen"
+	RoleOrmawa     UserRole = "ormawa"
+)
+
 type User struct {
 	ID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	Name     string    `gorm:"type:varchar(100);not null" json:"name" validate:"required,min=2,max=100"`
 	Email    string    `gorm:"type:varchar(255);uniqueIndex;not null" json:"email" validate:"required,email"`
 	Password string    `gorm:"type:varchar(255);not null" json:"-" validate:"required,min=8"`
-	Role     string    `gorm:"type:varchar(50);not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa"`
+	Role     UserRole  `gorm:"type:user_role;not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa"`
 
 	Timestamp
 }

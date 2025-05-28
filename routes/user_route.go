@@ -18,8 +18,8 @@ func User(route *gin.Engine, injector *do.Injector) {
 		// User
 		routes.POST("/register", userController.Register)
 		routes.POST("/login", userController.Login)
-		routes.DELETE("", middleware.Authenticate(jwtService), userController.Delete)
-		routes.PATCH("", middleware.Authenticate(jwtService), userController.Update)
+		routes.DELETE("/delete", middleware.Authenticate(jwtService), userController.Delete)
+		routes.PATCH("/update", middleware.Authenticate(jwtService), userController.Update)
 		routes.GET("/me", middleware.Authenticate(jwtService), userController.Me)
 	}
 }
