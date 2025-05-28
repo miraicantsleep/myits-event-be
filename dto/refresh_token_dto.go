@@ -8,11 +8,6 @@ const (
 )
 
 type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	Role         string `json:"role"`
-}
-
-type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+	AccessToken string `json:"access_token"`
+	Role        string `json:"role"`
 }

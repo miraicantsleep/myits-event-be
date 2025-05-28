@@ -11,10 +11,9 @@ import (
 func ProvideUserDependencies(injector *do.Injector, db *gorm.DB, jwtService service.JWTService) {
 	// Repository
 	userRepository := repository.NewUserRepository(db)
-	refreshTokenRepository := repository.NewRefreshTokenRepository(db)
 
 	// Service
-	userService := service.NewUserService(userRepository, refreshTokenRepository, jwtService, db)
+	userService := service.NewUserService(userRepository, jwtService, db)
 
 	// Controller
 	do.Provide(

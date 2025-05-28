@@ -24,5 +24,6 @@ jobs:
               git pull --rebase origin main
               git status
               go build -o main main.go
+              go run main.go --migrate
               sudo systemctl restart myits-event-be.service
               sudo systemctl status myits-event-be.service --no-pager
