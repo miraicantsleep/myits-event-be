@@ -111,7 +111,7 @@ func (s *departmentService) Update(ctx context.Context, req dto.DepartmentUpdate
 	data := entity.Department{
 		ID:      department.ID,
 		Name:    req.Name,
-		Faculty: department.Faculty,
+		Faculty: req.Faculty,
 	}
 
 	departmentUpdate, err := s.departmentRepo.Update(ctx, nil, data)
@@ -122,7 +122,7 @@ func (s *departmentService) Update(ctx context.Context, req dto.DepartmentUpdate
 	return dto.DepartmentUpdateResponse{
 		ID:      departmentUpdate.ID.String(),
 		Name:    departmentUpdate.Name,
-		Faculty: department.Faculty,
+		Faculty: departmentUpdate.Faculty,
 	}, nil
 }
 

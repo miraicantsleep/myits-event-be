@@ -19,7 +19,7 @@ func Department(route *gin.Engine, injector *do.Injector) {
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.Create)
 		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.GetAllDepartment)
 		routes.GET("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.GetDepartmentByID)
-		routes.PATCH("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.Update)
-		routes.DELETE("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.Delete)
+		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.Update)
+		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), departmentController.Delete)
 	}
 }

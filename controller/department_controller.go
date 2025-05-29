@@ -88,6 +88,13 @@ func (c *departmentController) GetDepartmentByID(ctx *gin.Context) {
 }
 
 func (c *departmentController) Update(ctx *gin.Context) {
+	departmentId := ctx.Param("id")
+	if departmentId == "" {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, "failed to get department id", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
 	var req dto.DepartmentUpdateRequest
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -95,7 +102,6 @@ func (c *departmentController) Update(ctx *gin.Context) {
 		return
 	}
 
-	departmentId := ctx.MustGet("department_id").(string)
 	result, err := c.departmentService.Update(ctx.Request.Context(), req, departmentId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_DEPARTMENT, err.Error(), nil)
@@ -108,7 +114,12 @@ func (c *departmentController) Update(ctx *gin.Context) {
 }
 
 func (c *departmentController) Delete(ctx *gin.Context) {
-	departmentId := ctx.MustGet("department_id").(string)
+	departmentId := ctx.Param("id")
+	if departmentId == "" {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, "failed to get department id", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
 
 	if err := c.departmentService.Delete(ctx.Request.Context(), departmentId); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_DEPARTMENT, err.Error(), nil)
