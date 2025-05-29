@@ -19,7 +19,7 @@ type User struct {
 	Name     string    `gorm:"type:varchar(100);not null" json:"name" validate:"required,min=2,max=100"`
 	Email    string    `gorm:"type:varchar(255);uniqueIndex;not null" json:"email" validate:"required,email"`
 	Password string    `gorm:"type:varchar(255);not null" json:"-" validate:"required,min=8"`
-	Role     UserRole  `gorm:"type:user_role;not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa"`
+	Role     UserRole  `gorm:"type:user_role;not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa admin"`
 
 	Timestamp
 }

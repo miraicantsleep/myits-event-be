@@ -47,8 +47,35 @@ func Authenticate(jwtService service.JWTService) gin.HandlerFunc {
 			return
 		}
 
+		role, err := jwtService.GetRoleByToken(authHeader)
+		if err != nil {
+			response := utils.BuildResponseFailed(dto.MESSAGE_FAILED_PROSES_REQUEST, err.Error(), nil)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
 		ctx.Set("token", authHeader)
 		ctx.Set("user_id", userId)
+		ctx.Set("role", role)
+		ctx.Next()
+	}
+}
+
+func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userRole, exists := ctx.Get("role")
+		if !exists {
+			response := utils.BuildResponseFailed(dto.MESSAGE_FAILED_PROSES_REQUEST, "failed to get user role", nil)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		if userRole != requiredRole {
+			response := utils.BuildResponseFailed(dto.MESSAGE_FAILED_PROSES_REQUEST, "insufficient permission", nil)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
 		ctx.Next()
 	}
 }
