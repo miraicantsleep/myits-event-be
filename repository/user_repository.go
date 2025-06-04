@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-
+	"log"
 	"github.com/miraicantsleep/myits-event-be/dto"
 	"github.com/miraicantsleep/myits-event-be/entity"
 	"gorm.io/gorm"
@@ -29,21 +29,26 @@ type (
 )
 
 func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{
-		db: db,
-	}
+	return &userRepository{db: db}
 }
 
 func (r *userRepository) Register(ctx context.Context, tx *gorm.DB, user entity.User) (entity.User, error) {
-	if tx == nil {
-		tx = r.db
-	}
+    if tx == nil {
+        tx = r.db
+    }
 
-	if err := tx.WithContext(ctx).Create(&user).Error; err != nil {
-		return entity.User{}, err
-	}
+    // Log input user sebelum Insert
+    log.Printf("[Repo.Register] Input: %+v\n", user)
 
-	return user, nil
+    // Misal pakai Gorm Create() bawaan:
+    if err := tx.WithContext(ctx).Create(&user).Error; err != nil {
+        // Log error detail sebelum return
+        log.Printf("[Repo.Register] Gagal insert ke DB: %v\n", err)
+        return entity.User{}, err
+    }
+
+    log.Printf("[Repo.Register] Berhasil insert, ID: %s\n", user.ID)
+    return user, nil
 }
 
 func (r *userRepository) GetAllUserWithPagination(
@@ -56,21 +61,25 @@ func (r *userRepository) GetAllUserWithPagination(
 	}
 
 	var users []entity.User
-	var err error
 	var count int64
 
 	req.Default()
 
-	query := tx.WithContext(ctx).Model(&entity.User{})
+	dbQuery := tx.WithContext(ctx).Model(&entity.User{})
 	if req.Search != "" {
-		query = query.Where("name LIKE ?", "%"+req.Search+"%")
+		likePattern := "%" + req.Search + "%"
+		dbQuery = dbQuery.Where("name LIKE ?", likePattern)
 	}
 
-	if err := query.Count(&count).Error; err != nil {
+	if err := dbQuery.Count(&count).Error; err != nil {
 		return dto.GetAllUserRepositoryResponse{}, err
 	}
 
-	if err := query.Scopes(Paginate(req)).Find(&users).Error; err != nil {
+	offset := (req.Page - 1) * req.PerPage
+	if err := dbQuery.
+		Limit(req.PerPage).
+		Offset(offset).
+		Find(&users).Error; err != nil {
 		return dto.GetAllUserRepositoryResponse{}, err
 	}
 
@@ -83,7 +92,7 @@ func (r *userRepository) GetAllUserWithPagination(
 			Count:   count,
 			MaxPage: totalPage,
 		},
-	}, err
+	}, nil
 }
 
 func (r *userRepository) GetUserById(ctx context.Context, tx *gorm.DB, userId string) (entity.User, error) {
@@ -92,7 +101,10 @@ func (r *userRepository) GetUserById(ctx context.Context, tx *gorm.DB, userId st
 	}
 
 	var user entity.User
-	if err := tx.WithContext(ctx).Where("id = ?", userId).Take(&user).Error; err != nil {
+	err := tx.WithContext(ctx).
+		First(&user, "id = ?", userId).
+		Error
+	if err != nil {
 		return entity.User{}, err
 	}
 
@@ -105,7 +117,10 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, tx *gorm.DB, email 
 	}
 
 	var user entity.User
-	if err := tx.WithContext(ctx).Where("email = ?", email).Take(&user).Error; err != nil {
+	err := tx.WithContext(ctx).
+		First(&user, "email = ?", email).
+		Error
+	if err != nil {
 		return entity.User{}, err
 	}
 
@@ -118,7 +133,13 @@ func (r *userRepository) CheckEmail(ctx context.Context, tx *gorm.DB, email stri
 	}
 
 	var user entity.User
-	if err := tx.WithContext(ctx).Where("email = ?", email).Take(&user).Error; err != nil {
+	err := tx.WithContext(ctx).
+		First(&user, "email = ?", email).
+		Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.User{}, false, nil
+		}
 		return entity.User{}, false, err
 	}
 
@@ -130,7 +151,18 @@ func (r *userRepository) Update(ctx context.Context, tx *gorm.DB, user entity.Us
 		tx = r.db
 	}
 
-	if err := tx.WithContext(ctx).Updates(&user).Error; err != nil {
+	query := `
+		UPDATE users
+		SET name = ?, email = ?, password = ?, updated_at = ?
+		WHERE id = ?
+	`
+	if err := tx.WithContext(ctx).Exec(query,
+		user.Name,
+		user.Email,
+		user.Password,
+		user.UpdatedAt,
+		user.ID,
+	).Error; err != nil {
 		return entity.User{}, err
 	}
 
@@ -142,7 +174,8 @@ func (r *userRepository) Delete(ctx context.Context, tx *gorm.DB, userId string)
 		tx = r.db
 	}
 
-	if err := tx.WithContext(ctx).Delete(&entity.User{}, "id = ?", userId).Error; err != nil {
+	query := "DELETE FROM users WHERE id = ?"
+	if err := tx.WithContext(ctx).Exec(query, userId).Error; err != nil {
 		return err
 	}
 
