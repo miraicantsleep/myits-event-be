@@ -60,8 +60,7 @@ func Authenticate(jwtService service.JWTService) gin.HandlerFunc {
 		ctx.Next()
 	}
 }
-
-func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userRole, exists := ctx.Get("role")
 		if !exists {
@@ -70,7 +69,16 @@ func RoleMiddleware(requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		if userRole != requiredRole {
+		// Check if user's role is in the list of required roles
+		hasPermission := false
+		for _, role := range requiredRoles {
+			if userRole == role {
+				hasPermission = true
+				break
+			}
+		}
+
+		if !hasPermission {
 			response := utils.BuildResponseFailed(dto.MESSAGE_FAILED_PROSES_REQUEST, "insufficient permission", nil)
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
