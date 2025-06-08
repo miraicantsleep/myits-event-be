@@ -53,35 +53,44 @@ func (r *departmentRepository) GetAllDepartmentWithPagination(
 		tx = r.db
 	}
 
-	var departments []entity.Department
-	var err error
-	var count int64
-
 	req.Default()
+	offset := (req.Page - 1) * req.PerPage
 
-	query := tx.WithContext(ctx).Model(&entity.Department{})
-	if req.Search != "" {
-		query = query.Where("name LIKE ?", "%"+req.Search+"%")
-	}
-
-	if err := query.Count(&count).Error; err != nil {
+	// Hitung total count
+	var count int64
+	countQuery := `
+		SELECT COUNT(*) 
+		FROM departments d
+		LEFT JOIN users u ON d.user_id = u.id
+		WHERE d.name LIKE ? AND d.deleted_at IS NULL AND u.deleted_at IS NULL
+	`
+	if err := tx.Raw(countQuery, "%"+req.Search+"%").Scan(&count).Error; err != nil {
 		return dto.GetAllDepartmentRepositoryResponse{}, err
 	}
 
-	if err := query.Scopes(Paginate(req)).Find(&departments).Error; err != nil {
+	// Query data dengan join
+	var departmentResponses []dto.DepartmentResponse
+	dataQuery := `
+		SELECT d.id, d.name, d.faculty, u.email
+		FROM departments d
+		LEFT JOIN users u ON d.user_id = u.id
+		WHERE d.name LIKE ? AND d.deleted_at IS NULL AND u.deleted_at IS NULL
+		LIMIT ? OFFSET ?
+	`
+	if err := tx.Raw(dataQuery, "%"+req.Search+"%", req.PerPage, offset).Scan(&departmentResponses).Error; err != nil {
 		return dto.GetAllDepartmentRepositoryResponse{}, err
 	}
 
 	totalPage := TotalPage(count, int64(req.PerPage))
 	return dto.GetAllDepartmentRepositoryResponse{
-		Departments: departments,
+		Departments: departmentResponses,
 		PaginationResponse: dto.PaginationResponse{
 			Page:    req.Page,
 			PerPage: req.PerPage,
 			Count:   count,
 			MaxPage: totalPage,
 		},
-	}, err
+	}, nil
 }
 
 func (r *departmentRepository) GetDepartmentById(ctx context.Context, tx *gorm.DB, departmentId string) (entity.Department, error) {

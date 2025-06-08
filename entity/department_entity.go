@@ -9,5 +9,8 @@ type Department struct {
 	Name    string    `gorm:"type:varchar(100);not null" json:"name" validate:"required,min=2,max=100"`
 	Faculty string    `gorm:"type:varchar(100);not null" json:"faculty" validate:"required,min=2,max=100"`
 
+	UserID uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	User   User      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+
 	Timestamp
 }

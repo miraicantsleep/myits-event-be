@@ -21,6 +21,7 @@ type (
 
 	departmentService struct {
 		departmentRepo repository.DepartmentRepository
+		userRepo       repository.UserRepository
 		jwtService     JWTService
 		db             *gorm.DB
 	}
@@ -28,31 +29,58 @@ type (
 
 func NewDepartmentService(
 	departmentRepo repository.DepartmentRepository,
+	userRepo repository.UserRepository,
 	jwtService JWTService,
 	db *gorm.DB,
 ) DepartmentService {
 	return &departmentService{
 		departmentRepo: departmentRepo,
+		userRepo:       userRepo,
 		jwtService:     jwtService,
 		db:             db,
 	}
 }
 
 func (s *departmentService) Create(ctx context.Context, req dto.DepartmentCreateRequest) (dto.DepartmentResponse, error) {
+	tx := s.db.Begin()
+	defer SafeRollback(tx)
+
+	// Convert DTO to entity for user creation
+	userEntity := entity.User{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+		Role:     "departemen",
+	}
+
+	// Create user via repository (assuming you have userRepo)
+	createdUser, err := s.userRepo.Register(ctx, tx, userEntity)
+	if err != nil {
+		return dto.DepartmentResponse{}, dto.ErrCreateUser
+	}
+
+	// Create department with user_id
 	department := entity.Department{
 		Name:    req.Name,
 		Faculty: req.Faculty,
+		UserID:  createdUser.ID,
 	}
 
-	departmentReg, err := s.departmentRepo.Create(ctx, nil, department)
+	departmentReg, err := s.departmentRepo.Create(ctx, tx, department)
 	if err != nil {
 		return dto.DepartmentResponse{}, dto.ErrCreateDepartment
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return dto.DepartmentResponse{}, err
 	}
 
 	return dto.DepartmentResponse{
 		ID:      departmentReg.ID.String(),
 		Name:    departmentReg.Name,
 		Faculty: departmentReg.Faculty,
+		Email:   createdUser.Email,
 	}, nil
 }
 
@@ -65,19 +93,8 @@ func (s *departmentService) GetAllDepartmentWithPagination(
 		return dto.DepartmentPaginationResponse{}, err
 	}
 
-	var datas []dto.DepartmentResponse
-	for _, department := range dataWithPaginate.Departments {
-		data := dto.DepartmentResponse{
-			ID:      department.ID.String(),
-			Name:    department.Name,
-			Faculty: department.Faculty,
-		}
-
-		datas = append(datas, data)
-	}
-
 	return dto.DepartmentPaginationResponse{
-		Data: datas,
+		Data: dataWithPaginate.Departments,
 		PaginationResponse: dto.PaginationResponse{
 			Page:    dataWithPaginate.Page,
 			PerPage: dataWithPaginate.PerPage,
@@ -93,10 +110,16 @@ func (s *departmentService) GetDepartmentById(ctx context.Context, departmentId 
 		return dto.DepartmentResponse{}, dto.ErrGetDepartmentById
 	}
 
+	user, err := s.userRepo.GetUserById(ctx, nil, department.UserID.String())
+	if err != nil {
+		return dto.DepartmentResponse{}, dto.ErrGetUserById
+	}
+
 	return dto.DepartmentResponse{
 		ID:      department.ID.String(),
 		Name:    department.Name,
 		Faculty: department.Faculty,
+		Email:   user.Email,
 	}, nil
 }
 
@@ -104,26 +127,50 @@ func (s *departmentService) Update(ctx context.Context, req dto.DepartmentUpdate
 	dto.DepartmentUpdateResponse,
 	error,
 ) {
-	department, err := s.departmentRepo.GetDepartmentById(ctx, nil, departmentId)
+	tx := s.db.Begin()
+	defer SafeRollback(tx)
+
+	department, err := s.departmentRepo.GetDepartmentById(ctx, tx, departmentId)
 	if err != nil {
+		tx.Rollback()
 		return dto.DepartmentUpdateResponse{}, dto.ErrDepartmentNotFound
 	}
 
-	data := entity.Department{
+	if req.Email != "" {
+		userUpdate := entity.User{
+			ID:    department.UserID,
+			Name:  req.Name,
+			Email: req.Email,
+		}
+
+		if err := tx.WithContext(ctx).Model(&userUpdate).Select("name", "email").Updates(userUpdate).Error; err != nil {
+			tx.Rollback()
+			return dto.DepartmentUpdateResponse{}, err
+		}
+	}
+
+	departmentData := entity.Department{
 		ID:      department.ID,
 		Name:    req.Name,
 		Faculty: req.Faculty,
+		UserID:  department.UserID,
 	}
 
-	departmentUpdate, err := s.departmentRepo.Update(ctx, nil, data)
+	departmentUpdate, err := s.departmentRepo.Update(ctx, tx, departmentData)
 	if err != nil {
+		tx.Rollback()
 		return dto.DepartmentUpdateResponse{}, dto.ErrUpdateDepartment
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return dto.DepartmentUpdateResponse{}, err
 	}
 
 	return dto.DepartmentUpdateResponse{
 		ID:      departmentUpdate.ID.String(),
 		Name:    departmentUpdate.Name,
 		Faculty: departmentUpdate.Faculty,
+		Email:   req.Email,
 	}, nil
 }
 
@@ -131,14 +178,23 @@ func (s *departmentService) Delete(ctx context.Context, departmentId string) err
 	tx := s.db.Begin()
 	defer SafeRollback(tx)
 
-	department, err := s.departmentRepo.GetDepartmentById(ctx, nil, departmentId)
+	department, err := s.departmentRepo.GetDepartmentById(ctx, tx, departmentId)
 	if err != nil {
 		return dto.ErrDepartmentNotFound
 	}
 
-	err = s.departmentRepo.Delete(ctx, nil, department.ID.String())
+	err = s.departmentRepo.Delete(ctx, tx, department.ID.String())
 	if err != nil {
 		return dto.ErrDeleteDepartment
+	}
+
+	err = s.userRepo.Delete(ctx, tx, department.UserID.String())
+	if err != nil {
+		return dto.ErrDeleteUser
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
 	}
 
 	return nil

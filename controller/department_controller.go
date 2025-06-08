@@ -20,12 +20,14 @@ type (
 
 	departmentController struct {
 		departmentService service.DepartmentService
+		userService       service.UserService
 	}
 )
 
-func NewDepartmentController(ds service.DepartmentService) DepartmentController {
+func NewDepartmentController(ds service.DepartmentService, us service.UserService) DepartmentController {
 	return &departmentController{
 		departmentService: ds,
+		userService:       us,
 	}
 }
 

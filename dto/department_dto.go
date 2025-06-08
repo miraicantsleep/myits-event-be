@@ -2,8 +2,6 @@ package dto
 
 import (
 	"errors"
-
-	"github.com/miraicantsleep/myits-event-be/entity"
 )
 
 const (
@@ -33,7 +31,7 @@ var (
 
 type (
 	DepartmentCreateRequest struct {
-		Name    string `json:"name" form:"name" binding:"required,min=2,max=100"`
+		UserCreateRequest
 		Faculty string `json:"faculty" form:"faculty" binding:"required,min=2,max=100"`
 	}
 
@@ -41,6 +39,7 @@ type (
 		ID      string `json:"id"`
 		Name    string `json:"name"`
 		Faculty string `json:"faculty"`
+		Email   string `json:"email"`
 	}
 
 	DepartmentPaginationResponse struct {
@@ -49,18 +48,20 @@ type (
 	}
 
 	GetAllDepartmentRepositoryResponse struct {
-		Departments []entity.Department `json:"Departments"`
+		Departments []DepartmentResponse `json:"Departments"`
 		PaginationResponse
 	}
 
 	DepartmentUpdateRequest struct {
 		Name    string `json:"name" form:"name" binding:"omitempty,min=2,max=100"`
 		Faculty string `json:"faculty" form:"faculty" binding:"omitempty,min=2,max=100"`
+		Email   string `json:"email" form:"email" binding:"required,email"`
 	}
 
 	DepartmentUpdateResponse struct {
 		ID      string `json:"id"`
 		Name    string `json:"name"`
 		Faculty string `json:"faculty"`
+		Email   string `json:"email"`
 	}
 )
