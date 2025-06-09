@@ -10,6 +10,6 @@ type Room struct {
 	Department   Department       `gorm:"foreignKey:DepartmentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"department"`
 	Name         string           `gorm:"type:varchar(255);not null" json:"name"`
 	Capacity     int              `gorm:"not null" json:"capacity"`
-	Bookings     []BookingRequest `gorm:"foreignKey:RoomID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"bookings,omitempty"`
+	Bookings     []BookingRequest `gorm:"many2many:booking_request_room" json:"bookings,omitempty"`
 	Timestamp
 }
