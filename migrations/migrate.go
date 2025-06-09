@@ -16,6 +16,9 @@ func Migrate(db *gorm.DB) error {
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'event_type') THEN
 				CREATE TYPE event_type AS ENUM ('online', 'offline');
 			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rsvp_status') THEN
+				CREATE TYPE rsvp_status AS ENUM ('accepted', 'declined', 'pending');
+			END IF;
 		END
 		$$;
 	`).Error
@@ -24,7 +27,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(
-		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{},
+		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{},
 	); err != nil {
 		return err
 	}
