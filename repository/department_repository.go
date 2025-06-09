@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/miraicantsleep/myits-event-be/dto"
 	"github.com/miraicantsleep/myits-event-be/entity"
@@ -19,6 +20,7 @@ type (
 		GetDepartmentById(ctx context.Context, tx *gorm.DB, departmentId string) (entity.Department, error)
 		Update(ctx context.Context, tx *gorm.DB, department entity.Department) (entity.Department, error)
 		Delete(ctx context.Context, tx *gorm.DB, departmentId string) error
+		GetDepartmentByUserId(ctx context.Context, tx *gorm.DB, userId string) (*entity.Department, error)
 	}
 
 	departmentRepository struct {
@@ -128,4 +130,20 @@ func (r *departmentRepository) Delete(ctx context.Context, tx *gorm.DB, departme
 	}
 
 	return nil
+}
+func (r *departmentRepository) GetDepartmentByUserId(ctx context.Context, tx *gorm.DB, userId string) (*entity.Department, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var department entity.Department
+
+	if err := tx.WithContext(ctx).
+		First(&department, "admin_id = ?", userId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, dto.ErrDepartmentNotFound
+		}
+		return nil, err
+	}
+
+	return &department, nil
 }

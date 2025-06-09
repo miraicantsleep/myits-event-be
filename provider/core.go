@@ -29,4 +29,5 @@ func RegisterDependencies(injector *do.Injector) {
 	ProvideUserDependencies(injector, db, jwtService)
 	ProvideDepartmentDependencies(injector, db, jwtService)
 	ProvideEventDependencies(injector, db, jwtService)
+	ProvideRoomDependencies(injector, db, jwtService)
 }

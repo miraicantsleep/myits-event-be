@@ -75,7 +75,7 @@ func (s *userService) Register(ctx context.Context, req dto.UserCreateRequest) (
 
 	userReg, err := s.userRepo.Register(ctx, nil, user)
 	if err != nil {
-		return dto.UserResponse{}, dto.ErrCreateUser
+		return dto.UserResponse{}, errors.New("asd")
 	}
 
 	return dto.UserResponse{

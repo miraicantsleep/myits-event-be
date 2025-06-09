@@ -33,6 +33,7 @@ type (
 	DepartmentCreateRequest struct {
 		UserCreateRequest
 		Faculty string `json:"faculty" form:"faculty" binding:"required,min=2,max=100"`
+		AdminID string `json:"admin_id" form:"admin_id" binding:"required,uuid"`
 	}
 
 	DepartmentResponse struct {

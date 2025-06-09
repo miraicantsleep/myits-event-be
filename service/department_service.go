@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 
@@ -68,7 +69,7 @@ func (s *departmentService) Create(ctx context.Context, req dto.DepartmentCreate
 
 	departmentReg, err := s.departmentRepo.Create(ctx, tx, department)
 	if err != nil {
-		return dto.DepartmentResponse{}, dto.ErrCreateDepartment
+		return dto.DepartmentResponse{}, errors.New(err.Error())
 	}
 
 	// Commit transaction
