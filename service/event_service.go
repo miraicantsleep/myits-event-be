@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -135,13 +136,14 @@ func (s *eventService) GetEventById(ctx context.Context, eventId string) (dto.Ev
 }
 func (s *eventService) Update(ctx context.Context, req dto.EventUpdateRequest, eventId string) (dto.EventResponse, error) {
 	id, err := uuid.Parse(eventId)
+	log.Println("eventId:", eventId, "parsed ID:", id)
 	if err != nil {
 		return dto.EventResponse{}, err
 	}
 
 	event, err := s.eventRepo.GetEventById(ctx, nil, id.String())
 	if err != nil {
-		return dto.EventResponse{}, dto.ErrGetEventById
+		return dto.EventResponse{}, dto.ErrEventNotFound
 	}
 
 	if req.Name != "" {

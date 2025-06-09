@@ -122,7 +122,7 @@ func (r *eventRepository) Update(ctx context.Context, tx *gorm.DB, event entity.
 		return entity.Event{}, err
 	}
 
-	return event, nil
+	return r.GetEventById(ctx, tx, event.ID.String())
 }
 
 func (r *eventRepository) Delete(ctx context.Context, tx *gorm.DB, eventId string) error {
