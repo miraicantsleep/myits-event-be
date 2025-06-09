@@ -26,6 +26,10 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	if err := db.SetupJoinTable(&entity.Invitation{}, "Users", &entity.UserInvitation{}); err != nil {
+		return err
+	}
+
 	if err := db.AutoMigrate(
 		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{}, &entity.BookingRequest{},
 	); err != nil {

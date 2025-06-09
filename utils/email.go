@@ -13,7 +13,7 @@ func SendMail(toEmail string, subject string, body string) error {
 	}
 
 	mailer := gomail.NewMessage()
-	mailer.SetHeader("From", emailConfig.AuthEmail)
+	mailer.SetHeader("From", emailConfig.SenderEmail)
 	mailer.SetHeader("To", toEmail)
 	mailer.SetHeader("Subject", subject)
 	mailer.SetBody("text/html", body)
@@ -21,7 +21,7 @@ func SendMail(toEmail string, subject string, body string) error {
 	dialer := gomail.NewDialer(
 		emailConfig.Host,
 		emailConfig.Port,
-		emailConfig.AuthEmail,
+		emailConfig.AuthUsername,
 		emailConfig.AuthPassword,
 	)
 

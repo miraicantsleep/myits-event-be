@@ -20,6 +20,8 @@ type Event struct {
 	Created_By  uuid.UUID `gorm:"type:uuid;not null" json:"created_by"`
 	Event_Type  string    `gorm:"type:event_type;not null;default:'offline'" json:"event_type" validate:"required,oneof=online offline"`
 
+	// Relationships
+	Invitations []Invitation `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"invitations,omitempty"`
 	// temp
 	Creator_Name string `gorm:"->;column:creator_name" json:"creator_name,omitempty"`
 	Timestamp

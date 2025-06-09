@@ -23,9 +23,9 @@ type User struct {
 	Role     UserRole  `gorm:"type:user_role;not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa admin"`
 
 	// relationships
-	Events      []Event      `gorm:"foreignKey:Created_By;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"events,omitempty"`
-	Department  *Department  `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"department,omitempty"`
-	Invitations []Invitation `gorm:"many2many:user_invitation" json:"invitations"`
+	Events      []Event      `gorm:"foreignKey:Created_By;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"events,omitempty"`
+	Department  *Department  `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"department,omitempty"`
+	Invitations []Invitation `gorm:"many2many:user_invitation;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"invitations"`
 	Timestamp
 }
 

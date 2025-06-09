@@ -10,4 +10,5 @@ func RegisterRoutes(server *gin.Engine, injector *do.Injector) {
 	Department(server, injector)
 	Event(server, injector)
 	Room(server, injector)
+	Invitation(server, injector)
 }
