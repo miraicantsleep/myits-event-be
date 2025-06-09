@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -55,6 +56,12 @@ func (s *eventService) Create(ctx context.Context, req dto.EventCreateRequest, u
 		return dto.EventResponse{}, err
 	}
 
+	// check if event with the same name already exists
+	exists, _ := s.eventRepo.CheckEventExist(ctx, nil, req.Name)
+	if exists {
+		return dto.EventResponse{}, errors.New("event with the same name already exists")
+	}
+
 	event := entity.Event{
 		Name:        req.Name,
 		Description: req.Description,
@@ -66,7 +73,7 @@ func (s *eventService) Create(ctx context.Context, req dto.EventCreateRequest, u
 
 	eventReg, err := s.eventRepo.Create(ctx, nil, event)
 	if err != nil {
-		return dto.EventResponse{}, dto.ErrCreateEvent
+		return dto.EventResponse{}, errors.New(err.Error())
 	}
 
 	return dto.EventResponse{
@@ -75,7 +82,7 @@ func (s *eventService) Create(ctx context.Context, req dto.EventCreateRequest, u
 		Description: eventReg.Description,
 		Start_Time:  eventReg.Start_Time.Format(time.RFC3339),
 		End_Time:    eventReg.End_Time.Format(time.RFC3339),
-		Created_By:  eventReg.Created_By.String(),
+		Created_By:  eventReg.Creator_Name,
 		Event_Type:  eventReg.Event_Type,
 	}, nil
 }
@@ -122,7 +129,7 @@ func (s *eventService) GetEventById(ctx context.Context, eventId string) (dto.Ev
 		Description: event.Description,
 		Start_Time:  event.Start_Time.Format(time.RFC3339),
 		End_Time:    event.End_Time.Format(time.RFC3339),
-		Created_By:  event.Created_By.String(),
+		Created_By:  event.Creator_Name,
 		Event_Type:  event.Event_Type,
 	}, nil
 }
@@ -160,6 +167,13 @@ func (s *eventService) Update(ctx context.Context, req dto.EventUpdateRequest, e
 	if req.Event_Type != "" {
 		event.Event_Type = req.Event_Type
 	}
+
+	// check if event with the same name already exists
+	exists, _ := s.eventRepo.CheckEventExist(ctx, nil, event.Name)
+	if exists {
+		return dto.EventResponse{}, errors.New("event with the same name already exists")
+	}
+
 	updatedEvent, err := s.eventRepo.Update(ctx, nil, event)
 	if err != nil {
 		return dto.EventResponse{}, dto.ErrUpdateEvent
@@ -170,7 +184,7 @@ func (s *eventService) Update(ctx context.Context, req dto.EventUpdateRequest, e
 		Description: updatedEvent.Description,
 		Start_Time:  updatedEvent.Start_Time.Format(time.RFC3339),
 		End_Time:    updatedEvent.End_Time.Format(time.RFC3339),
-		Created_By:  updatedEvent.Created_By.String(),
+		Created_By:  updatedEvent.Creator_Name,
 		Event_Type:  updatedEvent.Event_Type,
 	}, nil
 }

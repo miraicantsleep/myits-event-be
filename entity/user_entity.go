@@ -22,6 +22,10 @@ type User struct {
 	Password string    `gorm:"type:varchar(255);not null" json:"password" validate:"required,min=8"`
 	Role     UserRole  `gorm:"type:user_role;not null;default:'user'" json:"role" validate:"required,oneof=user departemen ormawa admin"`
 
+	// relationships
+	Events     []Event     `gorm:"foreignKey:Created_By;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"events,omitempty"`
+	Department *Department `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"department,omitempty"`
+
 	Timestamp
 }
 

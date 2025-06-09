@@ -18,8 +18,9 @@ type Event struct {
 	Start_Time  time.Time `gorm:"type:timestamp;not null" json:"start_time" validate:"required"`
 	End_Time    time.Time `gorm:"type:timestamp;not null" json:"end_time" validate:"required"`
 	Created_By  uuid.UUID `gorm:"type:uuid;not null" json:"created_by"`
-	Creator     User      `gorm:"foreignKey:Created_By;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"creator"`
 	Event_Type  string    `gorm:"type:event_type;not null;default:'offline'" json:"event_type" validate:"required,oneof=online offline"`
 
+	// temp
+	Creator_Name string `gorm:"->;column:creator_name" json:"creator_name,omitempty"`
 	Timestamp
 }
