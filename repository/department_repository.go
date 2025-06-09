@@ -138,7 +138,7 @@ func (r *departmentRepository) GetDepartmentByUserId(ctx context.Context, tx *go
 	var department entity.Department
 
 	if err := tx.WithContext(ctx).
-		First(&department, "admin_id = ?", userId).Error; err != nil {
+		First(&department, "user_id = ?", userId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, dto.ErrDepartmentNotFound
 		}

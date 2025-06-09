@@ -1,18 +1,20 @@
 [
   {
-    "name": "admin",
-    "telp_number": "08123456789",
-    "email": "admin1234@gmail.com",
-    "password": "admin1234",
-    "role": "admin",
-    "is_verified": true
+    "name": "mirai",
+    "email": "mirai@mirai.com",
+    "password": "mirai123123",
+    "role": "admin"
   },
   {
-    "name": "user",
-    "telp_number": "08123456789",
-    "email": "user1234@gmail.com",
-    "password": "user1234",
-    "role": "user",
-    "is_verified": true
+    "name": "mathias adya",
+    "email": "mathias@mathias.com",
+    "password": "mathias123",
+    "role": "user"
+  },
+  {
+    "name": "Himpunan Mahasiswa Teknik Computer-Informatika",
+    "email": "hmtc@hmtc.com",
+    "password": "hmtc123123",
+    "role": "ormawa"
   }
 ]

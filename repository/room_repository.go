@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/miraicantsleep/myits-event-be/dto"
 	"github.com/miraicantsleep/myits-event-be/entity"
 	"gorm.io/gorm"
@@ -50,25 +51,83 @@ func (r *roomRepository) GetRoomByID(ctx context.Context, id string) (entity.Roo
 }
 
 func (r *roomRepository) GetRoomByName(ctx context.Context, name string) (entity.Room, error) {
-	//
-	// Implementation for getting a room by name
+	tx := r.db
+	if tx == nil {
+		return entity.Room{}, dto.ErrGetRoomByName
+	}
+	var room entity.Room
+	if err := tx.WithContext(ctx).Where("name = ?", name).First(&room).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.Room{}, dto.ErrRoomNotFound
+		}
+		return entity.Room{}, err
+	}
 	return entity.Room{}, nil
 }
 
 func (r *roomRepository) GetAllRoom(ctx context.Context) ([]entity.Room, error) {
-	//
-	// Implementation for getting all rooms
-	return nil, nil
+	tx := r.db
+	if tx == nil {
+		return nil, dto.ErrGetAllRoom
+	}
+	var rooms []entity.Room
+	if err := tx.WithContext(ctx).Find(&rooms).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.ErrRoomNotFound
+		}
+		return nil, err
+	}
+	if len(rooms) > 0 {
+		return rooms, nil
+	}
+	return nil, dto.ErrRoomNotFound
 }
 
 func (r *roomRepository) Update(ctx context.Context, id string, room entity.Room) (entity.Room, error) {
-	//
-	// Implementation for updating a room
-	return entity.Room{}, nil
+	tx := r.db
+	if tx == nil {
+		return entity.Room{}, dto.ErrUpdateRoom
+	}
+
+	// Check if room exists
+	var existingRoom entity.Room
+	if err := tx.WithContext(ctx).Where("id = ?", id).First(&existingRoom).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.Room{}, dto.ErrRoomNotFound
+		}
+		return entity.Room{}, err
+	}
+
+	// Preserve the ID
+	room.ID, _ = uuid.Parse(id)
+
+	// Update the room
+	if err := tx.WithContext(ctx).Model(&existingRoom).Updates(room).Error; err != nil {
+		return entity.Room{}, err
+	}
+
+	// Get the updated room
+	if err := tx.WithContext(ctx).Where("id = ?", id).First(&room).Error; err != nil {
+		return entity.Room{}, err
+	}
+
+	return room, nil
 }
 
 func (r *roomRepository) Delete(ctx context.Context, id string) error {
-	//
-	// Implementation for deleting a room
+	tx := r.db
+	if tx == nil {
+		return dto.ErrDeleteRoom
+	}
+	var room entity.Room
+	if err := tx.WithContext(ctx).Where("id = ?", id).First(&room).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return dto.ErrRoomNotFound
+		}
+		return err
+	}
+	if err := tx.WithContext(ctx).Delete(&room).Error; err != nil {
+		return err
+	}
 	return nil
 }

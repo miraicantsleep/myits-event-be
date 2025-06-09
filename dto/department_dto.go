@@ -31,9 +31,10 @@ var (
 
 type (
 	DepartmentCreateRequest struct {
-		UserCreateRequest
-		Faculty string `json:"faculty" form:"faculty" binding:"required,min=2,max=100"`
-		AdminID string `json:"admin_id" form:"admin_id" binding:"required,uuid"`
+		Name     string `json:"name" form:"name" binding:"required,min=2,max=100"`
+		Email    string `json:"email" form:"email" binding:"required,email"`
+		Password string `json:"password" form:"password" binding:"required,min=8"`
+		Faculty  string `json:"faculty" form:"faculty" binding:"required,min=2,max=100"`
 	}
 
 	DepartmentResponse struct {
