@@ -27,7 +27,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	if err := db.AutoMigrate(
-		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{},
+		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{}, &entity.BookingRequest{},
 	); err != nil {
 		return err
 	}
