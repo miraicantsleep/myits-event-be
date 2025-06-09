@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Teknik Informatika",
+        "faculty": "FTEIC",
+        "email": "tinformatika@its.ac.id",
+        "password": "tinformatika123"
+    },
+    {
+        "name": "Teknik Komputer",
+        "faculty": "FTEIC",
+        "email": "tekkomputer@its.ac.id",
+        "password": "tekkomputer123"
+    },
+    {
+        "name": "Teknologi Informasi",
+        "faculty": "FTEIC",
+        "email": "tinformasi@its.ac.id",
+        "password": "tinformasi123"
+    }
+]
