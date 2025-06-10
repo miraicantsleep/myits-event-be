@@ -5,102 +5,316 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Invitation: {{ .EventName }}</title>
     <style>
+        /* Email-safe CSS - compatible with Gmail and other email clients */
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
             color: #333333;
+            line-height: 1.6;
         }
+        
         .email-container {
             max-width: 600px;
             margin: 20px auto;
             background-color: #ffffff;
-            border: 1px solid #dddddd;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
+        
         .header {
-            background-color: #007bff; /* Example primary color */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #ffffff;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .content {
-            padding: 30px;
-            line-height: 1.6;
-        }
-        .content p {
+        
+        .logo-container {
             margin-bottom: 15px;
         }
-        .qr-code-container {
+        
+        .logo-container img {
+            height: 50px;
+            width: auto;
+            max-width: 200px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 25px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .event-highlight {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .content p {
+            margin-bottom: 15px;
+            color: #4a5568;
+            font-size: 16px;
+        }
+        
+        .rsvp-section {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
             text-align: center;
-            margin-top: 25px;
-            margin-bottom: 25px;
+            border: 2px solid #e2e8f0;
         }
-        .qr-code-container img {
-            border: 5px solid #eee;
-            border-radius: 4px;
-            padding: 5px;
-            background: #fff;
+        
+        .rsvp-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
         }
-        .footer {
-            background-color: #f9f9f9;
-            color: #777777;
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            border-top: 1px solid #dddddd;
+        
+        .rsvp-buttons {
+            margin-top: 20px;
         }
-        .button {
+        
+        .btn {
             display: inline-block;
-            background-color: #28a745; /* Example button color */
-            color: #ffffff;
             padding: 12px 25px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
-            margin-top: 10px;
+            font-weight: bold;
+            margin: 5px 8px;
+            text-align: center;
+            min-width: 130px;
+        }
+        
+        .btn-accept {
+            background-color: #48bb78;
+            color: #ffffff;
+        }
+        
+        .btn-decline {
+            background-color: #f56565;
+            color: #ffffff;
+        }
+        
+        .qr-section {
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .qr-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .qr-description {
+            color: #718096;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .qr-code-container {
+            display: inline-block;
+            padding: 15px;
+            background-color: #ffffff;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+        }
+        
+        .qr-code-container img {
+            display: block;
+            width: 180px;
+            height: 180px;
+            border-radius: 8px;
+        }
+        
+        .contact-section {
+            background-color: #e6fffa;
+            border-left: 4px solid #4ecdc4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .contact-section p {
+            margin: 0;
+            color: #2c7a7b;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer p {
+            margin: 0;
+        }
+        
+        .social-links {
+            margin-top: 15px;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background-color: #4a5568;
+            border-radius: 50%;
+            margin: 0 5px;
+            line-height: 35px;
+            text-decoration: none;
+            color: #e2e8f0;
+            font-weight: bold;
+        }
+        
+        /* Mobile responsiveness */
+        @media screen and (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                padding: 25px 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .btn {
+                display: block;
+                margin: 8px auto;
+                width: 80%;
+                max-width: 200px;
+            }
+            
+            .qr-code-container img {
+                width: 150px;
+                height: 150px;
+            }
         }
     </style>
+    <!--[if mso]>
+    <style type="text/css">
+        .email-container {
+            width: 600px !important;
+        }
+        .btn {
+            mso-style-priority: 100 !important;
+        }
+    </style>
+    <![endif]-->
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>You're Invited!</h1>
-        </div>
-        <div class="content">
-            <p>Hello {{ .UserName }},</p>
-            <p>We're thrilled to invite you to <strong>{{ .EventName }}</strong>! Get ready for an amazing experience.</p>
+    <!-- Email-safe table structure for better compatibility -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f7fa;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <div class="email-container">
+                    <div class="header">
+                        <div class="logo-container">
+                            <img src="https://event.chow.my.id/_next/image?url=%2Fimages%2Fmyits-event.png&w=1200&q=75" alt="MyITS Event Logo" style="height: 50px; width: auto; max-width: 200px;">
+                        </div>
+                        <h1>You're Invited!</h1>
+                        <p>An exclusive invitation just for you</p>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="greeting">Hello {{ .UserName }},</div>
+                        
+                        <p>We're absolutely <strong>thrilled</strong> to invite you to <span class="event-highlight">{{ .EventName }}</span>! Get ready for an extraordinary experience that you won't want to miss.</p>
 
-                <!-- RSVP Actions -->
-                <p style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
-                    Please let us know if you can make it: <br><br>
-                    <a href="{{ .AcceptLink }}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-right: 10px; display: inline-block;">Accept Invitation</a>
-                    <a href="{{ .DeclineLink }}" style="background-color: #dc3545; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Decline Invitation</a>
-                </p>
+                        <div class="rsvp-section">
+                            <div class="rsvp-title">🎉 Will you join us?</div>
+                            <p style="margin-bottom: 20px; color: #4a5568;">Please let us know if you can make it:</p>
+                            <div class="rsvp-buttons">
+                                <!-- Using table for better email client support -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto;">
+                                    <tr>
+                                        <td style="padding: 0 5px;">
+                                            <a href="{{ .AcceptLink }}" class="btn btn-accept" style="background-color: #48bb78; color: #ffffff; text-decoration: none; display: inline-block; padding: 12px 25px; border-radius: 8px; font-weight: bold;">✓ Accept Invitation</a>
+                                        </td>
+                                        <td style="padding: 0 5px;">
+                                            <a href="{{ .DeclineLink }}" class="btn btn-decline" style="background-color: #f56565; color: #ffffff; text-decoration: none; display: inline-block; padding: 12px 25px; border-radius: 8px; font-weight: bold;">✗ Decline Invitation</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
 
-                <p>Your unique QR code below will be used for check-in at the event.</p>
-            <div class="qr-code-container">
-                <img src="cid:qr_code_image" alt="Your Event QR Code" width="200" height="200">
-            </div>
+                        <div class="qr-section">
+                            <div class="qr-title">🎫 Your Digital Ticket</div>
+                            <p class="qr-description">Your unique QR code for seamless check-in at the event</p>
+                            <div class="qr-code-container">
+                                <img src="cid:qr_code_image" alt="Your Event QR Code" style="display: block; width: 180px; height: 180px; border-radius: 8px;">
+                            </div>
+                        </div>
 
-            <p>If you have any questions, feel free to contact us.</p>
-            <p>We look forward to seeing you there!</p>
-            <!-- Optional: Add a button for event details if applicable -->
-            <!--
-            <p style="text-align: center;">
-                <a href="{{ .EventLink }}" class="button">View Event Details</a>
-            </p>
-            -->
-        </div>
-        <div class="footer">
-            <p>&copy; {{ .Year }} Your Event Platform. All rights reserved.</p>
-        </div>
-    </div>
+                        <div class="contact-section">
+                            <p>💬 Have questions? We're here to help! Feel free to reach out to us anytime.</p>
+                        </div>
+
+                        <p style="text-align: center; font-size: 18px; color: #2d3748; font-weight: bold; margin-top: 25px;">
+                            We can't wait to see you there! 🌟
+                        </p>
+                        
+                        <!-- Optional: Add a button for event details if applicable -->
+                        <!--
+                        <div style="text-align: center; margin-top: 25px;">
+                            <a href="{{ .EventLink }}" class="btn" style="background-color: #667eea; color: white; text-decoration: none; display: inline-block; padding: 12px 25px; border-radius: 8px; font-weight: bold;">📋 View Event Details</a>
+                        </div>
+                        -->
+                    </div>
+                    
+                    <div class="footer">
+                        <p>&copy; {{ .Year }} MyITS Event Platform. All rights reserved.</p>
+                        <div class="social-links">
+                            <a href="#" title="Facebook" style="background-color: #4a5568; color: #e2e8f0; text-decoration: none; display: inline-block; width: 35px; height: 35px; border-radius: 50%; line-height: 35px; margin: 0 5px;">f</a>
+                            <a href="#" title="Twitter" style="background-color: #4a5568; color: #e2e8f0; text-decoration: none; display: inline-block; width: 35px; height: 35px; border-radius: 50%; line-height: 35px; margin: 0 5px;">t</a>
+                            <a href="#" title="Instagram" style="background-color: #4a5568; color: #e2e8f0; text-decoration: none; display: inline-block; width: 35px; height: 35px; border-radius: 50%; line-height: 35px; margin: 0 5px;">i</a>
+                            <a href="#" title="LinkedIn" style="background-color: #4a5568; color: #e2e8f0; text-decoration: none; display: inline-block; width: 35px; height: 35px; border-radius: 50%; line-height: 35px; margin: 0 5px;">in</a>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
