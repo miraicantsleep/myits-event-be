@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes" // Required for parsing HTML template
 	"html/template" // Required for parsing HTML template
+	"io"            // Required for gomail.SetCopyFunc
 
 	// "path/filepath" // If loading template from specific path structure beyond just filename
 	"github.com/miraicantsleep/myits-event-be/config"
@@ -64,9 +65,20 @@ func SendInvitationMail(toEmail string, subject string, templateData map[string]
 	mailer.SetHeader("Subject", subject)
 
 	// Embed the QR code image
-	// The CID "qr_code_image" must match the src in the HTML template's img tag
 	if len(qrCodeImage) > 0 {
-		mailer.EmbedData("qr_code_image", qrCodeImage, "image/png")
+		// The first argument to NewFile is the filename that might appear if the recipient tries to save the embedded image.
+		// It does not directly affect the CID unless no Content-ID is specified.
+		f := gomail.NewFile("qr_code_image.png",
+			gomail.SetHeader(map[string][]string{
+				"Content-ID": {"<qr_code_image>"}, // Important: CID used in HTML <img src="cid:qr_code_image">
+				// Optional: Content-Disposition can also be set if needed, though often not required for inline CIDs
+				// "Content-Disposition": {"inline; filename="qr_code_image.png""},
+			}),
+			gomail.SetCopyFunc(func(w io.Writer) error {
+				_, err := w.Write(qrCodeImage) // qrCodeImage is the []byte
+				return err
+			}))
+		mailer.Attach(f) // Attach the in-memory file with specified headers
 	}
 
 	mailer.SetBody("text/html", body.String())
