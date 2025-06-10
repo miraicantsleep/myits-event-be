@@ -45,6 +45,18 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	// Setup Join Table and AutoMigrate
+	if err := db.SetupJoinTable(&entity.Invitation{}, "Users", &entity.UserInvitation{}); err != nil {
+		return err
+	}
+
+	if err := db.AutoMigrate(
+		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{}, &entity.BookingRequest{}, &entity.UserInvitation{},
+	); err != nil {
+		return err
+	}
+
+	// SQL for QR Code trigger - MOVED TO AFTER AUTOMIGRATE
 	qrCodeTriggerSQL := `
 	DROP TRIGGER IF EXISTS trg_generate_qr_code_before_insert_on_user_invitation ON user_invitation;
 	CREATE TRIGGER trg_generate_qr_code_before_insert_on_user_invitation
@@ -53,16 +65,6 @@ func Migrate(db *gorm.DB) error {
 	    EXECUTE FUNCTION generate_user_invitation_qr_code();
 	`
 	if err := db.Exec(qrCodeTriggerSQL).Error; err != nil {
-		return err
-	}
-
-	if err := db.SetupJoinTable(&entity.Invitation{}, "Users", &entity.UserInvitation{}); err != nil {
-		return err
-	}
-
-	if err := db.AutoMigrate(
-		&entity.User{}, &entity.Department{}, &entity.Event{}, &entity.Room{}, &entity.Invitation{}, &entity.BookingRequest{}, &entity.UserInvitation{},
-	); err != nil {
 		return err
 	}
 
