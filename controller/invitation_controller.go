@@ -17,6 +17,7 @@ type (
 		GetAllInvitations(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
+		ScanQRCode(ctx *gin.Context)
 	}
 
 	invitationController struct {
@@ -137,5 +138,29 @@ func (c *invitationController) Delete(ctx *gin.Context) {
 		return
 	}
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_DELETE_INVITATION, nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *invitationController) ScanQRCode(ctx *gin.Context) {
+	qrCode := ctx.Param("qr_code") // Get QR code from path parameter
+	if qrCode == "" {
+		res := utils.BuildResponseFailed("QR code is required", "Missing QR code in path", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	result, err := c.invitationService.ScanQRCode(ctx.Request.Context(), qrCode)
+	if err != nil {
+		// Consider different error types for specific responses
+		// For example, if err.Error() is "QR code not found" or "QR code already used"
+		// you might want to return a specific HTTP status code like http.StatusNotFound or http.StatusConflict
+		// For now, a generic bad request or a more specific error message will do.
+		// The service layer returns descriptive errors.
+		res := utils.BuildResponseFailed("Failed to process QR code", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res) // Or potentially http.StatusNotFound / http.StatusConflict based on err
+		return
+	}
+
+	res := utils.BuildResponseSuccess("QR code scanned successfully", result)
 	ctx.JSON(http.StatusOK, res)
 }

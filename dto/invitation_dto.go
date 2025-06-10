@@ -52,6 +52,15 @@ type UpdateInvitationRequest struct {
 	AttendedAt string `json:"attended_at,omitempty"`
 }
 
+// ScanQRCodeResponse defines the response structure for a successful QR code scan.
+type ScanQRCodeResponse struct {
+	UserID     string `json:"user_id"`
+	UserName   string `json:"user_name,omitempty"`
+	EventName  string `json:"event_name,omitempty"`
+	AttendedAt string `json:"attended_at"`
+	Message    string `json:"message"`
+}
+
 type InvitationResponse struct {
 	ID         string `json:"id"`
 	EventName  string `json:"event_name"`
