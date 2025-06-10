@@ -65,20 +65,20 @@ func SendInvitationMail(toEmail string, subject string, templateData map[string]
 	mailer.SetHeader("Subject", subject)
 
 	// Embed the QR code image
-	if len(qrCodeImage) > 0 {
-		// The first argument to NewFile is the filename that might appear if the recipient tries to save the embedded image.
-		// It does not directly affect the CID unless no Content-ID is specified.
-		f := gomail.NewFile("qr_code_image.png",
+	if len(qrCodeImage) > 0 { // qrCodeImage is []byte
+		// The first argument to Embed, "qr_code_image", will be used as the default for Content-ID
+		// if not overridden by SetHeader. It's also used as the "filename" in Content-Disposition.
+		// We explicitly set Content-ID to ensure it's exactly "<qr_code_image>" to match "cid:qr_code_image" in HTML.
+		mailer.Embed("qr_code_image.png", // This name is primarily for reference/filename hint
 			gomail.SetHeader(map[string][]string{
-				"Content-ID": {"<qr_code_image>"}, // Important: CID used in HTML <img src="cid:qr_code_image">
-				// Optional: Content-Disposition can also be set if needed, though often not required for inline CIDs
-				// "Content-Disposition": {"inline; filename="qr_code_image.png""},
+				"Content-Type": {"image/png"},
+				"Content-ID":   {"<qr_code_image>"}, // Crucial for <img src="cid:qr_code_image">
 			}),
 			gomail.SetCopyFunc(func(w io.Writer) error {
-				_, err := w.Write(qrCodeImage) // qrCodeImage is the []byte
-				return err
-			}))
-		mailer.Attach(f) // Attach the in-memory file with specified headers
+				_, errWrite := w.Write(qrCodeImage)
+				return errWrite
+			}),
+		)
 	}
 
 	mailer.SetBody("text/html", body.String())
