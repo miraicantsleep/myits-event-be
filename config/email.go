@@ -8,8 +8,7 @@ type EmailConfig struct {
 	Host         string `mapstructure:"SMTP_HOST"`
 	Port         int    `mapstructure:"SMTP_PORT"`
 	SenderName   string `mapstructure:"SMTP_SENDER_NAME"`
-	SenderEmail  string `mapstructure:"SMTP_SENDER_EMAIL"` // ← new
-	AuthUsername string `mapstructure:"SMTP_AUTH_EMAIL"`   // still your AKIA… string
+	AuthUsername string `mapstructure:"SMTP_AUTH_EMAIL"` // still your AKIA… string
 	AuthPassword string `mapstructure:"SMTP_AUTH_PASSWORD"`
 }
 

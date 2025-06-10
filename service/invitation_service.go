@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,20 +81,20 @@ func (s *invitationService) Create(ctx context.Context, req dto.CreateInvitation
 	if err != nil {
 		return dto.CreateInvitationResponse{}, err
 	}
-
-	// assemble response
+	// assemble response and send emails to invited users
 	names := make([]string, len(inv.Users))
 	for i, u := range inv.Users {
 		names[i] = u.Name
+
+		// send email to each invited user
+		err = utils.SendMail(u.Email, "Event Invitation", "You have been invited to "+inv.Event.Name)
+		if err != nil {
+			log.Println("Failed to send invitation email to", u.Email, ":", err)
+			continue
+		}
 	}
 
 	now := time.Now().Format(time.RFC3339)
-
-	// send emails
-	err = utils.SendMail("mnabil190405@gmail.com", "Invitation Created", "You have been invited to an event.")
-	if err != nil {
-		return dto.CreateInvitationResponse{}, err
-	}
 
 	return dto.CreateInvitationResponse{
 		EventName:  inv.Event.Name,
