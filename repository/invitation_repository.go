@@ -21,6 +21,7 @@ type (
 		CheckInvitationRSVPStatus(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, rsvpStatus string) (bool, error)
 		GetUserInvitationByQRCode(ctx context.Context, tx *gorm.DB, qrCode string) (entity.UserInvitation, error)
 		UpdateUserInvitation(ctx context.Context, tx *gorm.DB, userInvitation entity.UserInvitation) (entity.UserInvitation, error)
+		GetUserInvitation(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, userID uuid.UUID) (entity.UserInvitation, error)
 	}
 
 	invitationRepository struct {
@@ -164,6 +165,17 @@ func (r *invitationRepository) GetUserInvitationByQRCode(ctx context.Context, tx
 	// However, the prompt is to update UserInvitation, so preloading User and Event is not strictly necessary for the update itself.
 	// Let's keep it simple first and fetch only UserInvitation.
 	if err := tx.WithContext(ctx).Where("qr_code = ?", qrCode).First(&userInvitation).Error; err != nil {
+		return entity.UserInvitation{}, err
+	}
+	return userInvitation, nil
+}
+
+func (r *invitationRepository) GetUserInvitation(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, userID uuid.UUID) (entity.UserInvitation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var userInvitation entity.UserInvitation
+	if err := tx.WithContext(ctx).Where("invitation_id = ? AND user_id = ?", invitationID, userID).First(&userInvitation).Error; err != nil {
 		return entity.UserInvitation{}, err
 	}
 	return userInvitation, nil

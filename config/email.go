@@ -10,6 +10,7 @@ type EmailConfig struct {
 	SenderName   string `mapstructure:"SMTP_SENDER_NAME"`
 	AuthUsername string `mapstructure:"SMTP_AUTH_EMAIL"` // still your AKIA… string
 	AuthPassword string `mapstructure:"SMTP_AUTH_PASSWORD"`
+	ApiBaseUrl   string `mapstructure:"API_BASE_URL"` // New field
 }
 
 func NewEmailConfig() (*EmailConfig, error) {

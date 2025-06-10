@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/miraicantsleep/myits-event-be/dto"
+	"github.com/miraicantsleep/myits-event-be/entity" // Added for RSVPStatus constants
 	"github.com/miraicantsleep/myits-event-be/service"
 	"github.com/miraicantsleep/myits-event-be/utils"
 )
@@ -18,6 +19,8 @@ type (
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
 		ScanQRCode(ctx *gin.Context)
+		AcceptRSVP(ctx *gin.Context)  // New method
+		DeclineRSVP(ctx *gin.Context) // New method
 	}
 
 	invitationController struct {
@@ -163,4 +166,63 @@ func (c *invitationController) ScanQRCode(ctx *gin.Context) {
 
 	res := utils.BuildResponseSuccess("QR code scanned successfully", result)
 	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *invitationController) AcceptRSVP(ctx *gin.Context) {
+	token := ctx.Param("token")
+	if token == "" {
+		ctx.HTML(http.StatusBadRequest, "rsvp_error.html", gin.H{
+			"title":   "RSVP Error",
+			"message": "Invalid RSVP link. No token provided.",
+		})
+		return
+	}
+
+	// Call the service method (to be created in the next plan step)
+	// For now, assume it's called ProcessRSVP and it's part of invitationService interface
+	err := c.invitationService.ProcessRSVP(ctx.Request.Context(), token, entity.RSVPStatusAccepted) // entity.RSVPStatusAccepted = "accepted"
+
+	if err != nil {
+		// Determine message based on error type if possible
+		// For now, a generic error message.
+		// Specific errors like "already RSVP'd" or "token not found" will be handled by the service.
+		ctx.HTML(http.StatusOK, "rsvp_error.html", gin.H{ // Using StatusOK for error page display from email link
+			"title":   "RSVP Problem",
+			"message": err.Error(), // Display service error message directly
+		})
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "rsvp_success.html", gin.H{
+		"title":   "RSVP Confirmed",
+		"message": "Thank you! Your RSVP has been successfully recorded as ACCEPTED.",
+		"status":  "Accepted",
+	})
+}
+
+func (c *invitationController) DeclineRSVP(ctx *gin.Context) {
+	token := ctx.Param("token")
+	if token == "" {
+		ctx.HTML(http.StatusBadRequest, "rsvp_error.html", gin.H{
+			"title":   "RSVP Error",
+			"message": "Invalid RSVP link. No token provided.",
+		})
+		return
+	}
+
+	err := c.invitationService.ProcessRSVP(ctx.Request.Context(), token, entity.RSVPStatusDeclined) // entity.RSVPStatusDeclined = "declined"
+
+	if err != nil {
+		ctx.HTML(http.StatusOK, "rsvp_error.html", gin.H{
+			"title":   "RSVP Problem",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.HTML(http.StatusOK, "rsvp_success.html", gin.H{
+		"title":   "RSVP Updated",
+		"message": "Your RSVP has been successfully recorded as DECLINED.",
+		"status":  "Declined",
+	})
 }

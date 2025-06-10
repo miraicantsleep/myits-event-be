@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: inline-block; }
+        h1 { color: #4CAF50; } /* Green for success */
+        p { font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ .title }}</h1>
+        <p>{{ .message }}</p>
+        <p><a href="javascript:window.close();">Close this window</a></p>
+    </div>
+</body>
+</html>

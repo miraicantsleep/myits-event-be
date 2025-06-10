@@ -155,6 +155,143 @@ func TestInvitationService_ScanQRCode_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestInvitationService_ProcessRSVP_Accept_Success(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil) // JWTService and DB not directly used by ProcessRSVP logic
+
+	token := "valid-accept-token"
+	now := time.Now() // For RsvpAt comparison if needed, though not strictly here
+
+	userInv := entity.UserInvitation{
+		UserID:       uuid.New(),
+		InvitationID: uuid.New(),
+		QRCode:       token,
+		RSVPStatus:   entity.RSVPStatusPending, // Important: must be pending
+	}
+
+	// Expect GetUserInvitationByQRCode to be called
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(userInv, nil)
+
+	// Expect UpdateUserInvitation to be called with updated status and RsvpAt
+	// We capture the argument to check its fields.
+	mockRepo.On("UpdateUserInvitation", mock.Anything, (*gorm.DB)(nil), mock.MatchedBy(func(ui entity.UserInvitation) bool {
+		return ui.QRCode == token && ui.RSVPStatus == entity.RSVPStatusAccepted && ui.RsvpAt != nil
+	})).Return(func(ctx context.Context, db *gorm.DB, ui entity.UserInvitation) entity.UserInvitation {
+		// Simulate the update for the returned object if needed by any caller, though ProcessRSVP doesn't use the return of Update.
+		ui.RsvpAt = &now
+		return ui
+	}, nil)
+
+	err := invService.ProcessRSVP(context.Background(), token, entity.RSVPStatusAccepted)
+
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestInvitationService_ProcessRSVP_Decline_Success(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil)
+	token := "valid-decline-token"
+
+	userInv := entity.UserInvitation{
+		UserID:       uuid.New(),
+		InvitationID: uuid.New(),
+		QRCode:       token,
+		RSVPStatus:   entity.RSVPStatusPending,
+	}
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(userInv, nil)
+	mockRepo.On("UpdateUserInvitation", mock.Anything, (*gorm.DB)(nil), mock.MatchedBy(func(ui entity.UserInvitation) bool {
+		return ui.QRCode == token && ui.RSVPStatus == entity.RSVPStatusDeclined && ui.RsvpAt != nil
+	})).Return(userInv, nil) // Return value doesn't strictly matter here as service doesn't use it
+
+	err := invService.ProcessRSVP(context.Background(), token, entity.RSVPStatusDeclined)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestInvitationService_ProcessRSVP_TokenNotFound(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil)
+	token := "invalid-token"
+
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(entity.UserInvitation{}, gorm.ErrRecordNotFound)
+
+	err := invService.ProcessRSVP(context.Background(), token, entity.RSVPStatusAccepted)
+
+	assert.Error(t, err)
+	assert.Equal(t, "sorry, this RSVP link appears to be invalid or has expired", err.Error())
+	mockRepo.AssertExpectations(t)
+}
+
+func TestInvitationService_ProcessRSVP_AlreadyRSVPd(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil)
+	token := "already-rsvpd-token"
+	existingStatus := entity.RSVPStatusAccepted
+	someTimeAgo := time.Now().Add(-24 * time.Hour)
+
+	userInv := entity.UserInvitation{
+		UserID:       uuid.New(),
+		InvitationID: uuid.New(),
+		QRCode:       token,
+		RSVPStatus:   existingStatus,
+		RsvpAt:       &someTimeAgo,
+	}
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(userInv, nil)
+
+	err := invService.ProcessRSVP(context.Background(), token, entity.RSVPStatusDeclined) // Attempt to change RSVP
+
+	assert.Error(t, err)
+	assert.Equal(t, "your RSVP has already been recorded as: "+existingStatus, err.Error())
+	mockRepo.AssertExpectations(t)
+	// Ensure UpdateUserInvitation was NOT called
+	mockRepo.AssertNotCalled(t, "UpdateUserInvitation", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestInvitationService_ProcessRSVP_UpdateError(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil)
+	token := "update-error-token"
+	dbError := errors.New("database update failed")
+
+	userInv := entity.UserInvitation{
+		UserID:       uuid.New(),
+		InvitationID: uuid.New(),
+		QRCode:       token,
+		RSVPStatus:   entity.RSVPStatusPending,
+	}
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(userInv, nil)
+	mockRepo.On("UpdateUserInvitation", mock.Anything, (*gorm.DB)(nil), mock.AnythingOfType("entity.UserInvitation")).Return(entity.UserInvitation{}, dbError)
+
+	err := invService.ProcessRSVP(context.Background(), token, entity.RSVPStatusAccepted)
+
+	assert.Error(t, err)
+	assert.Equal(t, "an unexpected error occurred while saving your RSVP. Please try again later", err.Error())
+	mockRepo.AssertExpectations(t)
+}
+
+func TestInvitationService_ProcessRSVP_InvalidNewStatus(t *testing.T) {
+	mockRepo := new(MockInvitationRepository)
+	invService := service.NewInvitationService(mockRepo, nil, nil)
+	token := "invalid-new-status-token"
+
+	userInv := entity.UserInvitation{
+		UserID:       uuid.New(),
+		InvitationID: uuid.New(),
+		QRCode:       token,
+		RSVPStatus:   entity.RSVPStatusPending,
+	}
+	mockRepo.On("GetUserInvitationByQRCode", mock.Anything, (*gorm.DB)(nil), token).Return(userInv, nil)
+	// UpdateUserInvitation should not be called if new status is invalid
+
+	err := invService.ProcessRSVP(context.Background(), token, "maybe") // Invalid status
+
+	assert.Error(t, err)
+	assert.Equal(t, "an internal error occurred. Invalid RSVP status provided", err.Error())
+	mockRepo.AssertExpectations(t)
+	mockRepo.AssertNotCalled(t, "UpdateUserInvitation", mock.Anything, mock.Anything, mock.Anything)
+}
+
 // TestInvitationCreation_PopulatesQRCodeViaDBTrigger is an integration test
 // to verify that the database trigger populates QRCode when an invitation is created via the service.
 func TestInvitationCreation_PopulatesQRCodeViaDBTrigger(t *testing.T) {

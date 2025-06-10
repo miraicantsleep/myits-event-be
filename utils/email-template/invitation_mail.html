@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Invitation: {{ .EventName }}</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff; /* Example primary color */
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+        }
+        .content p {
+            margin-bottom: 15px;
+        }
+        .qr-code-container {
+            text-align: center;
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+        .qr-code-container img {
+            border: 5px solid #eee;
+            border-radius: 4px;
+            padding: 5px;
+            background: #fff;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            color: #777777;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            border-top: 1px solid #dddddd;
+        }
+        .button {
+            display: inline-block;
+            background-color: #28a745; /* Example button color */
+            color: #ffffff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>You're Invited!</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ .UserName }},</p>
+            <p>We're thrilled to invite you to <strong>{{ .EventName }}</strong>! Get ready for an amazing experience.</p>
+
+                <!-- RSVP Actions -->
+                <p style="text-align:center; margin-top: 20px; margin-bottom: 30px;">
+                    Please let us know if you can make it: <br><br>
+                    <a href="{{ .AcceptLink }}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-right: 10px; display: inline-block;">Accept Invitation</a>
+                    <a href="{{ .DeclineLink }}" style="background-color: #dc3545; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block;">Decline Invitation</a>
+                </p>
+
+                <p>Your unique QR code below will be used for check-in at the event.</p>
+            <div class="qr-code-container">
+                <img src="cid:qr_code_image" alt="Your Event QR Code" width="200" height="200">
+            </div>
+
+            <p>If you have any questions, feel free to contact us.</p>
+            <p>We look forward to seeing you there!</p>
+            <!-- Optional: Add a button for event details if applicable -->
+            <!--
+            <p style="text-align: center;">
+                <a href="{{ .EventLink }}" class="button">View Event Details</a>
+            </p>
+            -->
+        </div>
+        <div class="footer">
+            <p>&copy; {{ .Year }} Your Event Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
