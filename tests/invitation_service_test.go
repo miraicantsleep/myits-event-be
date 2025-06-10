@@ -155,6 +155,91 @@ func TestInvitationService_ScanQRCode_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+// TestInvitationCreation_PopulatesQRCodeViaDBTrigger is an integration test
+// to verify that the database trigger populates QRCode when an invitation is created via the service.
+func TestInvitationCreation_PopulatesQRCodeViaDBTrigger(t *testing.T) {
+	// 1. Setup: Real database connection and service
+	db := SetUpDatabaseConnection() // From tests/db_test.go
+	assert.NotNil(t, db)
+
+	// Clean up any potential old data from previous failed runs
+	// More targeted cleanup is better if specific IDs are known.
+	// This is a broad cleanup for safety during testing.
+	// Order matters due to foreign keys.
+	db.Exec("DELETE FROM user_invitation WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'testuser.qrtrigger.%@example.com')")
+	db.Exec("DELETE FROM invitations WHERE event_id IN (SELECT id FROM events WHERE name LIKE 'QR Trigger Test Event%')")
+	db.Exec("DELETE FROM events WHERE name LIKE 'QR Trigger Test Event%'")
+	db.Exec("DELETE FROM users WHERE email LIKE 'testuser.qrtrigger.%@example.com'")
+
+
+	invitationRepo := repository.NewInvitationRepository(db)
+	// For NewInvitationService, jwtService and db (*gorm.DB instance for service itself, not repo) might be needed.
+	// If jwtService is not strictly needed for Create operation path, nil might be okay.
+	// The db *gorm.DB for NewInvitationService is used if the service itself initiates transactions,
+	// which doesn't seem to be the case for Create. Let's pass the main db connection.
+	jwtService := service.NewJWTService() // A real JWT service instance
+	invService := service.NewInvitationService(invitationRepo, jwtService, db)
+
+	// 2. Create prerequisite User and Event entities directly in DB
+	testUser := entity.User{
+		Name:     "QR Trigger Test User",
+		Email:    "testuser.qrtrigger." + uuid.NewString() + "@example.com", // Unique email
+		Password: "password", // Will be hashed by BeforeCreate hook on User
+		Role:     entity.RoleUser,
+	}
+	err := db.Create(&testUser).Error
+	assert.NoError(t, err)
+
+	testEvent := entity.Event{
+		Name:        "QR Trigger Test Event " + uuid.NewString(),
+		Description: "Test event for QR trigger",
+		Date:        time.Now().Add(24 * time.Hour),
+		Location:    "Test Location",
+		Created_By:  testUser.ID,
+		Type:        entity.EventTypeOnline,
+		Status:      "upcoming",
+	}
+	err = db.Create(&testEvent).Error
+	assert.NoError(t, err)
+
+	// 3. Call invitationService.Create
+	createReq := dto.CreateInvitationRequest{
+		EventID: testEvent.ID.String(),
+		UserIDs: []string{testUser.ID.String()},
+	}
+	_, err = invService.Create(context.Background(), createReq)
+	assert.NoError(t, err)
+
+	// 4. Fetch the UserInvitation record directly from the database
+	var userInvitation entity.UserInvitation
+	// A more robust way to get InvitationID might be needed if multiple invitations for the same event exist.
+	// However, for this test, we assume one invitation is created for the event by the service call.
+	// A simpler way: find the invitation first.
+	var createdInvitation entity.Invitation
+	errFirstInv := db.Where("event_id = ?", testEvent.ID).First(&createdInvitation).Error
+	assert.NoError(t, errFirstInv)
+
+	err = db.Where("user_id = ? AND invitation_id = ?", testUser.ID, createdInvitation.ID).First(&userInvitation).Error
+	assert.NoError(t, err)
+
+
+	// 5. Assert QRCode is populated and is a valid UUID
+	assert.NotEmpty(t, userInvitation.QRCode, "QRCode should be populated by the database trigger")
+	_, err = uuid.Parse(userInvitation.QRCode)
+	assert.NoError(t, err, "Populated QRCode should be a valid UUID")
+
+	// 6. Cleanup (delete in reverse order of creation or rely on CASCADE CONSTRAINTS if set up)
+	// More specific cleanup:
+	err = db.Delete(&userInvitation).Error
+	assert.NoError(t, err)
+	err = db.Delete(&createdInvitation).Error // This should also delete user_invitations via GORM or cascade
+	assert.NoError(t, err)
+	err = db.Delete(&testEvent).Error
+	assert.NoError(t, err)
+	err = db.Delete(&testUser).Error
+	assert.NoError(t, err)
+}
+
 func TestInvitationService_ScanQRCode_NotFound(t *testing.T) {
 	mockRepo := new(MockInvitationRepository)
 	invService := service.NewInvitationService(mockRepo, nil, nil)

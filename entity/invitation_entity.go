@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 const (
@@ -29,13 +28,6 @@ type UserInvitation struct {
 	RSVPStatus   string     `gorm:"type:rsvp_status;not null;default:'pending'" json:"rsvp_status" validate:"required,oneof=accepted declined pending"`
 	RsvpAt       *time.Time `gorm:"type:timestamp;default:null" json:"rsvp_at,omitempty"`
 	AttendedAt   *time.Time `gorm:"type:timestamp;default:null" json:"attended_at,omitempty"`
-}
-
-func (ui *UserInvitation) BeforeCreate(tx *gorm.DB) (err error) {
-	if ui.QRCode == "" { // Generate QR code only if not already set (e.g., during seeding or testing)
-		ui.QRCode = uuid.New().String()
-	}
-	return
 }
 
 func (UserInvitation) TableName() string { return "user_invitation" }
