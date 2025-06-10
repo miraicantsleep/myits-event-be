@@ -71,6 +71,9 @@ func main() {
 		})
 	})
 
+	// Load HTML templates
+	server.LoadHTMLGlob("templates/*.html")
+
 	// routes
 	routes.RegisterRoutes(server, injector)
 

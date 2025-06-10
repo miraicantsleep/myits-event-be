@@ -23,6 +23,7 @@ type Invitation struct {
 type UserInvitation struct {
 	UserID       uuid.UUID  `gorm:"primaryKey"`
 	InvitationID uuid.UUID  `gorm:"primaryKey"`
+	QRCode       string     `gorm:"type:varchar(255);uniqueIndex" json:"qr_code,omitempty"`
 	InvitedAt    time.Time  `gorm:"type:timestamp;not null;default:CURRENT_TIMESTAMP" json:"invited_at"`
 	RSVPStatus   string     `gorm:"type:rsvp_status;not null;default:'pending'" json:"rsvp_status" validate:"required,oneof=accepted declined pending"`
 	RsvpAt       *time.Time `gorm:"type:timestamp;default:null" json:"rsvp_at,omitempty"`

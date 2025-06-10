@@ -22,5 +22,10 @@ func Invitation(route *gin.Engine, injector *do.Injector) {
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa"), invitationController.Create)
 		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa"), invitationController.Update)
 		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa"), invitationController.Delete)
+		routes.POST("/scan/:qr_code", middleware.Authenticate(jwtService), invitationController.ScanQRCode) // Added for QR Code Scan
+
+		// New RSVP Routes - No JWT authentication, token in path is used
+		routes.GET("/rsvp/accept/:token", invitationController.AcceptRSVP)
+		routes.GET("/rsvp/decline/:token", invitationController.DeclineRSVP)
 	}
 }

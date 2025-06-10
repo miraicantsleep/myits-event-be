@@ -19,6 +19,9 @@ type (
 		Delete(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) error
 		CheckInvitationExist(ctx context.Context, tx *gorm.DB, eventID uuid.UUID, userID ...uuid.UUID) (bool, error)
 		CheckInvitationRSVPStatus(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, rsvpStatus string) (bool, error)
+		GetUserInvitationByQRCode(ctx context.Context, tx *gorm.DB, qrCode string) (entity.UserInvitation, error)
+		UpdateUserInvitation(ctx context.Context, tx *gorm.DB, userInvitation entity.UserInvitation) (entity.UserInvitation, error)
+		GetUserInvitation(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, userID uuid.UUID) (entity.UserInvitation, error)
 	}
 
 	invitationRepository struct {
@@ -148,4 +151,43 @@ func (r *invitationRepository) CheckInvitationRSVPStatus(ctx context.Context, tx
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// GetUserInvitationByQRCode retrieves a UserInvitation by its QRCode
+func (r *invitationRepository) GetUserInvitationByQRCode(ctx context.Context, tx *gorm.DB, qrCode string) (entity.UserInvitation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var userInvitation entity.UserInvitation
+	// It's important to query the user_invitation table directly.
+	// We also need to join with Users and Invitations (and Events through Invitations)
+	// if we want to return more comprehensive information, but for now, just the UserInvitation record is fine.
+	// However, the prompt is to update UserInvitation, so preloading User and Event is not strictly necessary for the update itself.
+	// Let's keep it simple first and fetch only UserInvitation.
+	if err := tx.WithContext(ctx).Where("qr_code = ?", qrCode).First(&userInvitation).Error; err != nil {
+		return entity.UserInvitation{}, err
+	}
+	return userInvitation, nil
+}
+
+func (r *invitationRepository) GetUserInvitation(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID, userID uuid.UUID) (entity.UserInvitation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var userInvitation entity.UserInvitation
+	if err := tx.WithContext(ctx).Where("invitation_id = ? AND user_id = ?", invitationID, userID).First(&userInvitation).Error; err != nil {
+		return entity.UserInvitation{}, err
+	}
+	return userInvitation, nil
+}
+
+// UpdateUserInvitation updates an existing UserInvitation record
+func (r *invitationRepository) UpdateUserInvitation(ctx context.Context, tx *gorm.DB, userInvitation entity.UserInvitation) (entity.UserInvitation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	if err := tx.WithContext(ctx).Save(&userInvitation).Error; err != nil {
+		return entity.UserInvitation{}, err
+	}
+	return userInvitation, nil
 }
