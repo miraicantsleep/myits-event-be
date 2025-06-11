@@ -2,14 +2,15 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin"
 	"github.com/miraicantsleep/myits-event-be/controller"
+	"github.com/miraicantsleep/myits-event-be/service"
 	"github.com/samber/do"
 )
 
 func BookingRequest(server *gin.Engine, injector *do.Injector) {
 	bookingRequestController := do.MustInvoke[controller.BookingRequestController](injector)
-	BookingRequestRoutes(server, bookingRequestController)
+	jwtService := do.MustInvoke[service.JWTService](injector)
+	BookingRequestRoutes(server, bookingRequestController, jwtService)
 }
 
 func RegisterRoutes(server *gin.Engine, injector *do.Injector) {

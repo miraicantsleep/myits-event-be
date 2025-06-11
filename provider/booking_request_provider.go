@@ -19,14 +19,13 @@ func ProvideBookingRequestDependencies(injector *do.Injector, db *gorm.DB) {
 	do.ProvideNamed(injector, constants.BookingRequestService, func(i *do.Injector) (service.BookingRequestService, error) {
 		bookingRequestRepo := do.MustInvokeNamed[repository.BookingRequestRepository](i, constants.BookingRequestRepository)
 		roomRepo := do.MustInvokeNamed[repository.RoomRepository](i, constants.RoomRepository)
-		eventRepo := do.MustInvokeNamed[repository.EventRepository](i, constants.EventRepository) // Assumes EventRepository is available
+		eventRepo := do.MustInvokeNamed[repository.EventRepository](i, constants.EventRepository)
 		return service.NewBookingRequestService(bookingRequestRepo, roomRepo, eventRepo, db), nil
 	})
 
-	// Provide BookingRequestController
+	// ✅ Fix is here: Use pointer type
 	do.ProvideNamed(injector, constants.BookingRequestController, func(i *do.Injector) (controller.BookingRequestController, error) {
 		bookingRequestService := do.MustInvokeNamed[service.BookingRequestService](i, constants.BookingRequestService)
-		// jwtService := do.MustInvokeNamed[service.JWTService](i, constants.JWTService) // If auth is needed for controller
-		return controller.NewBookingRequestController(bookingRequestService /*, jwtService */), nil
+		return controller.NewBookingRequestController(bookingRequestService), nil
 	})
 }

@@ -23,4 +23,9 @@ const (
 	// Event
 	EventRepository = "EventRepository"
 	EventService    = "EventService"
+
+	// Room
+	RoomRepository = "RoomRepository"
+	RoomService    = "RoomService"
+	RoomController = "RoomController"
 )
