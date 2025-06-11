@@ -22,7 +22,7 @@ type bookingRequestController struct {
 	// jwtService service.JWTService // Uncomment if auth is needed for these routes
 }
 
-func NewBookingRequestController(brService service.BookingRequestService /*, jwtService service.JWTService*/) BookingRequestController {
+func NewBookingRequestController(brService service.BookingRequestService /*, jwtService service.JWTService*/) *bookingRequestController {
 	return &bookingRequestController{
 		bookingRequestService: brService,
 		// jwtService: jwtService, // Uncomment if auth is needed

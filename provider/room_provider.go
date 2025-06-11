@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/miraicantsleep/myits-event-be/constants"
 	"github.com/miraicantsleep/myits-event-be/controller"
 	"github.com/miraicantsleep/myits-event-be/repository"
 	"github.com/miraicantsleep/myits-event-be/service"
@@ -22,4 +23,10 @@ func ProvideRoomDependencies(injector *do.Injector, db *gorm.DB, jwtService serv
 			return controller.NewRoomController(roomService), nil
 		},
 	)
+	do.ProvideNamed(injector, constants.RoomRepository, func(injector *do.Injector) (repository.RoomRepository, error) {
+		// Ensure the DB is available
+		db := do.MustInvokeNamed[*gorm.DB](injector, constants.DB)
+		return repository.NewRoomRepository(db), nil
+	})
+
 }

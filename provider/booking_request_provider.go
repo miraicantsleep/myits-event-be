@@ -23,9 +23,9 @@ func ProvideBookingRequestDependencies(injector *do.Injector, db *gorm.DB) {
 		return service.NewBookingRequestService(bookingRequestRepo, roomRepo, eventRepo, db), nil
 	})
 
-	// ✅ Fix is here: Use pointer type
 	do.ProvideNamed(injector, constants.BookingRequestController, func(i *do.Injector) (controller.BookingRequestController, error) {
 		bookingRequestService := do.MustInvokeNamed[service.BookingRequestService](i, constants.BookingRequestService)
 		return controller.NewBookingRequestController(bookingRequestService), nil
 	})
+
 }

@@ -23,10 +23,8 @@ type (
 	}
 )
 
-func NewRoomRepository(db *gorm.DB) RoomRepository {
-	return &roomRepository{
-		db: db,
-	}
+func NewRoomRepository(db *gorm.DB) RoomRepository { // ✅ return interface
+	return &roomRepository{db}
 }
 
 func (r *roomRepository) Create(ctx context.Context, room entity.Room) (entity.Room, error) {
