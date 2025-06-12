@@ -36,7 +36,7 @@ func (r *roomRepository) Create(ctx context.Context, room entity.Room) (entity.R
 	}
 
 	var existingRoom entity.Room
-	if err := tx.WithContext(ctx).Where("name = ?", room.Name).First(&existingRoom).Error; err == nil {
+	if err := tx.WithContext(ctx).Where("name = ? AND department_id = ?", room.Name, room.DepartmentID).First(&existingRoom).Error; err == nil {
 		return entity.Room{}, dto.ErrRoomAlreadyExists
 	}
 
@@ -52,7 +52,7 @@ func (r *roomRepository) GetRoomByID(ctx context.Context, id string) (entity.Roo
 		return entity.Room{}, dto.ErrGetRoomByID
 	}
 	var room entity.Room
-	if err := tx.WithContext(ctx).Where("id = ?", id).First(&room).Error; err != nil {
+	if err := tx.WithContext(ctx).Preload("Department").First(&room, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return entity.Room{}, dto.ErrRoomNotFound
 		}
@@ -67,13 +67,13 @@ func (r *roomRepository) GetRoomByName(ctx context.Context, name string) (entity
 		return entity.Room{}, dto.ErrGetRoomByName
 	}
 	var room entity.Room
-	if err := tx.WithContext(ctx).Where("name = ?", name).First(&room).Error; err != nil {
+	if err := tx.WithContext(ctx).Preload("Department").Where("name = ?", name).First(&room).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return entity.Room{}, dto.ErrRoomNotFound
 		}
 		return entity.Room{}, err
 	}
-	return entity.Room{}, nil
+	return room, nil
 }
 
 func (r *roomRepository) GetAllRoom(ctx context.Context) ([]entity.Room, error) {
@@ -82,16 +82,10 @@ func (r *roomRepository) GetAllRoom(ctx context.Context) ([]entity.Room, error) 
 		return nil, dto.ErrGetAllRoom
 	}
 	var rooms []entity.Room
-	if err := tx.WithContext(ctx).Find(&rooms).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, dto.ErrRoomNotFound
-		}
+	if err := tx.WithContext(ctx).Preload("Department").Find(&rooms).Error; err != nil {
 		return nil, err
 	}
-	if len(rooms) > 0 {
-		return rooms, nil
-	}
-	return nil, dto.ErrRoomNotFound
+	return rooms, nil
 }
 
 func (r *roomRepository) Update(ctx context.Context, id string, room entity.Room) (entity.Room, error) {
@@ -100,7 +94,6 @@ func (r *roomRepository) Update(ctx context.Context, id string, room entity.Room
 		return entity.Room{}, dto.ErrUpdateRoom
 	}
 
-	// Check if room exists
 	var existingRoom entity.Room
 	if err := tx.WithContext(ctx).Where("id = ?", id).First(&existingRoom).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -109,16 +102,13 @@ func (r *roomRepository) Update(ctx context.Context, id string, room entity.Room
 		return entity.Room{}, err
 	}
 
-	// Preserve the ID
 	room.ID, _ = uuid.Parse(id)
 
-	// Update the room
 	if err := tx.WithContext(ctx).Model(&existingRoom).Updates(room).Error; err != nil {
 		return entity.Room{}, err
 	}
 
-	// Get the updated room
-	if err := tx.WithContext(ctx).Where("id = ?", id).First(&room).Error; err != nil {
+	if err := tx.WithContext(ctx).Preload("Department").Where("id = ?", id).First(&room).Error; err != nil {
 		return entity.Room{}, err
 	}
 

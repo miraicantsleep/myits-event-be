@@ -57,11 +57,11 @@ func (s *eventService) Create(ctx context.Context, req dto.EventCreateRequest, u
 		return dto.EventResponse{}, err
 	}
 
-	// check if event with the same name already exists
-	exists, _ := s.eventRepo.CheckEventExist(ctx, nil, req.Name)
-	if exists {
-		return dto.EventResponse{}, errors.New("event with the same name already exists")
-	}
+	// // check if event with the same name already exists
+	// exists, _ := s.eventRepo.CheckEventExist(ctx, nil, req.Name)
+	// if exists {
+	// 	return dto.EventResponse{}, errors.New("event with the same name already exists")
+	// }
 
 	event := entity.Event{
 		Name:        req.Name,

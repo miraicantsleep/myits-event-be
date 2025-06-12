@@ -18,6 +18,8 @@ func BookingRequest(route *gin.Engine, injector *do.Injector) {
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa"), bookingRequestController.Create)
 		routes.GET("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin", "departemen"), bookingRequestController.GetByID)
 		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin", "departemen"), bookingRequestController.GetAll)
+		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), bookingRequestController.Update)
+		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), bookingRequestController.Delete)
 		routes.PATCH("/:id/approve", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Approve)
 		routes.PATCH("/:id/reject", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Reject)
 	}

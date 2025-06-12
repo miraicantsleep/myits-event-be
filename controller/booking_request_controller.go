@@ -13,6 +13,8 @@ type BookingRequestController interface {
 	Create(ctx *gin.Context)
 	GetByID(ctx *gin.Context)
 	GetAll(ctx *gin.Context)
+	Update(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 	Approve(ctx *gin.Context)
 	Reject(ctx *gin.Context)
 }
@@ -35,16 +37,14 @@ func (c *bookingRequestController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// userID := ctx.MustGet("user_id").(string)
-
 	result, err := c.bookingRequestService.CreateBookingRequest(ctx.Request.Context(), req)
 	if err != nil {
-		res := utils.BuildResponseFailed("Failed to create booking request", err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_BOOKING_REQUEST, err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	res := utils.BuildResponseSuccess("Booking request created successfully", result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_BOOKING_REQUEST, result)
 	ctx.JSON(http.StatusCreated, res)
 }
 
@@ -58,30 +58,80 @@ func (c *bookingRequestController) GetByID(ctx *gin.Context) {
 
 	result, err := c.bookingRequestService.GetBookingRequestByID(ctx.Request.Context(), id)
 	if err != nil {
-		// Handle not found error specifically
-		// if errors.Is(err, gorm.ErrRecordNotFound) { // Or a custom error from service
-		// 	res := utils.BuildResponseFailed("Booking request not found", err.Error(), nil)
-		// 	ctx.JSON(http.StatusNotFound, res)
-		// 	return
-		// }
-		res := utils.BuildResponseFailed("Failed to get booking request", err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_BOOKING_REQUEST, err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	res := utils.BuildResponseSuccess("Booking request retrieved successfully", result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_BOOKING_REQUEST, result)
 	ctx.JSON(http.StatusOK, res)
 }
 
 func (c *bookingRequestController) GetAll(ctx *gin.Context) {
 	results, err := c.bookingRequestService.GetAllBookingRequests(ctx.Request.Context())
 	if err != nil {
-		res := utils.BuildResponseFailed("Failed to get all booking requests", err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_ALL_BOOKING_REQUESTS, err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	res := utils.BuildResponseSuccess("All booking requests retrieved successfully", results)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_ALL_BOOKING_REQUESTS, results)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *bookingRequestController) Update(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		res := utils.BuildResponseFailed("Booking request ID is required", "ID is empty", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	var req dto.BookingRequestUpdateRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	// ADD THIS LINE
+	role := ctx.MustGet("role").(string)
+
+	// MODIFY THIS LINE to pass the role
+	result, err := c.bookingRequestService.UpdateBookingRequest(ctx.Request.Context(), id, req, role)
+
+	// MODIFY this error handling block
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_BOOKING_REQUEST, err.Error(), nil)
+		// Use StatusForbidden for permission errors
+		if err.Error() == "ormawa users are not permitted to change the booking status" {
+			ctx.JSON(http.StatusForbidden, res)
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_BOOKING_REQUEST, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *bookingRequestController) Delete(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		res := utils.BuildResponseFailed("Booking request ID is required", "ID is empty", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	err := c.bookingRequestService.DeleteBookingRequest(ctx.Request.Context(), id)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_BOOKING_REQUEST, err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_DELETE_BOOKING_REQUEST, nil)
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -93,22 +143,14 @@ func (c *bookingRequestController) Approve(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Add role-based authorization if needed
-	// role := ctx.MustGet("role").(string)
-	// if role != "admin" && role != "department_admin" { // Example roles
-	// 	res := utils.BuildResponseFailed("Unauthorized", "Insufficient permissions", nil)
-	// 	ctx.JSON(http.StatusForbidden, res)
-	// 	return
-	// }
-
 	err := c.bookingRequestService.ApproveBookingRequest(ctx.Request.Context(), id)
 	if err != nil {
-		res := utils.BuildResponseFailed("Failed to approve booking request", err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_APPROVE_BOOKING_REQUEST, err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	res := utils.BuildResponseSuccess("Booking request approved successfully", nil)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_APPROVE_BOOKING_REQUEST, nil)
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -120,15 +162,13 @@ func (c *bookingRequestController) Reject(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Add role-based authorization if needed
-
 	err := c.bookingRequestService.RejectBookingRequest(ctx.Request.Context(), id)
 	if err != nil {
-		res := utils.BuildResponseFailed("Failed to reject booking request", err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_REJECT_BOOKING_REQUEST, err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return
 	}
 
-	res := utils.BuildResponseSuccess("Booking request rejected successfully", nil)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_REJECT_BOOKING_REQUEST, nil)
 	ctx.JSON(http.StatusOK, res)
 }
