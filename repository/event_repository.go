@@ -16,6 +16,7 @@ type (
 		Update(ctx context.Context, tx *gorm.DB, event entity.Event) (entity.Event, error)
 		Delete(ctx context.Context, tx *gorm.DB, eventId string) error
 		CheckEventExist(ctx context.Context, tx *gorm.DB, name string) (bool, error)
+		GetEventByUserId(ctx context.Context, tx *gorm.DB, userId string) ([]entity.Event, error)
 	}
 
 	eventRepository struct {
@@ -92,6 +93,26 @@ func (r *eventRepository) GetAllEventWithPagination(ctx context.Context, tx *gor
 			MaxPage: totalPage,
 		},
 	}, nil
+}
+
+// get event by user id
+
+func (r *eventRepository) GetEventByUserId(ctx context.Context, tx *gorm.DB, userId string) ([]entity.Event, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var events []entity.Event
+
+	if err := tx.WithContext(ctx).
+		Table("events").
+		Select("events.*, users.name as creator_name").
+		Joins("LEFT JOIN users ON events.created_by = users.id").
+		Where("events.created_by = ?", userId).
+		Find(&events).Error; err != nil {
+		return nil, err
+	}
+	return events, nil
 }
 
 func (r *eventRepository) GetEventById(ctx context.Context, tx *gorm.DB, eventId string) (entity.Event, error) {

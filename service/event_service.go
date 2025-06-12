@@ -17,7 +17,7 @@ import (
 type (
 	EventService interface {
 		Create(ctx context.Context, req dto.EventCreateRequest, userId string) (dto.EventResponse, error)
-		GetAllEventWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.EventPaginationResponse, error)
+		GetAllEventWithPagination(ctx context.Context, req dto.PaginationRequest, user_role string, user_id string) (dto.EventPaginationResponse, error)
 		GetEventById(ctx context.Context, eventId string) (dto.EventResponse, error)
 		Update(ctx context.Context, req dto.EventUpdateRequest, eventId string) (dto.EventResponse, error)
 		Delete(ctx context.Context, eventId string) error
@@ -88,10 +88,53 @@ func (s *eventService) Create(ctx context.Context, req dto.EventCreateRequest, u
 	}, nil
 }
 
-func (s *eventService) GetAllEventWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.EventPaginationResponse, error) {
+func (s *eventService) GetAllEventWithPagination(ctx context.Context, req dto.PaginationRequest, user_role string, user_id string) (dto.EventPaginationResponse, error) {
+
+	// if role ormawa only show events created by that ormawa
+	if user_role == "ormawa" {
+		// get events by user id
+		Events, err := s.eventRepo.GetEventByUserId(ctx, nil, user_id)
+		if err != nil {
+			return dto.EventPaginationResponse{}, errors.New("failed to get events by user id")
+		}
+		if len(Events) == 0 {
+			return dto.EventPaginationResponse{
+				Data: []dto.EventResponse{},
+				PaginationResponse: dto.PaginationResponse{
+					Page:    0,
+					PerPage: req.PerPage,
+					MaxPage: 0,
+					Count:   0,
+				},
+			}, nil
+		}
+		// map events to event responses
+		var eventResponses []dto.EventResponse
+		for _, event := range Events {
+			eventResponses = append(eventResponses, dto.EventResponse{
+				ID:          event.ID.String(),
+				Name:        event.Name,
+				Description: event.Description,
+				Start_Time:  event.Start_Time.Format(time.RFC3339),
+				End_Time:    event.End_Time.Format(time.RFC3339),
+				Created_By:  event.Creator_Name,
+				Event_Type:  event.Event_Type,
+			})
+		}
+		return dto.EventPaginationResponse{
+			Data: eventResponses,
+			PaginationResponse: dto.PaginationResponse{
+				Page:    1,
+				PerPage: req.PerPage,
+				MaxPage: 1,
+				Count:   int64(len(eventResponses)),
+			},
+		}, nil
+	}
+
 	EventsWithPagination, err := s.eventRepo.GetAllEventWithPagination(ctx, nil, req)
 	if err != nil {
-		return dto.EventPaginationResponse{}, dto.ErrGetAllEvent
+		return dto.EventPaginationResponse{}, err
 	}
 
 	var eventResponses []dto.EventResponse

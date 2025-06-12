@@ -50,6 +50,8 @@ func (c *eventController) Create(ctx *gin.Context) {
 }
 
 func (c *eventController) GetAllEvent(ctx *gin.Context) {
+	user_role := ctx.MustGet("role").(string)
+	user_id := ctx.MustGet("user_id").(string)
 	var req dto.PaginationRequest
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -57,7 +59,7 @@ func (c *eventController) GetAllEvent(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.eventService.GetAllEventWithPagination(ctx.Request.Context(), req)
+	result, err := c.eventService.GetAllEventWithPagination(ctx.Request.Context(), req, user_role, user_id)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_EVENT, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
