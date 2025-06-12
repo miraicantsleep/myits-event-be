@@ -195,12 +195,17 @@ func (s *invitationService) GetInvitationByID(ctx context.Context, invitationID 
 	resp := make([]dto.InvitationResponse, len(inv.Users))
 	now := time.Now().Format(time.RFC3339)
 	for i, u := range inv.Users {
+		userInv, err := s.invitationRepo.GetUserInvitation(ctx, nil, inv.ID, u.ID)
+		if err != nil {
+			return nil, err
+		}
 		resp[i] = dto.InvitationResponse{
 			ID:         inv.ID.String(),
 			EventName:  inv.Event.Name,
 			Name:       u.Name,
 			InvitedAt:  now,
 			RSVPStatus: entity.RSVPStatusPending,
+			Token:      userInv.QRCode,
 		}
 	}
 	return resp, nil
