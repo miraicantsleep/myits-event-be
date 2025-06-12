@@ -17,7 +17,7 @@ func Room(route *gin.Engine, injector *do.Injector) {
 	{
 		// Room
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), roomController.Create)
-		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), roomController.GetAllRoom)
+		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen", "ormawa"), roomController.GetAllRoom)
 		routes.GET("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), roomController.GetRoomByID)
 		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), roomController.Update)
 		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), roomController.Delete)
