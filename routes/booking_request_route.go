@@ -4,11 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/miraicantsleep/myits-event-be/controller"
 	"github.com/miraicantsleep/myits-event-be/middleware"
-	// "github.com/miraicantsleep/myits-event-be/service" // Not directly needed here, but good for context
+	"github.com/miraicantsleep/myits-event-be/service" // Not directly needed here, but good for context
 	// "gorm.io/gorm" // Not directly needed here
 )
 
-func BookingRequestRoutes(router *gin.Engine, bookingRequestController controller.BookingRequestController /*, jwtService service.JWTService, db *gorm.DB*/) {
+func BookingRequestRoutes(router *gin.Engine, bookingRequestController controller.BookingRequestController, jwtService service.JWTService /*db *gorm.DB*/) {
 	// authMiddleware := middleware.Authenticate(jwtService, db) // Assuming middleware.Authenticate exists
 	bookingRequestRoutes := router.Group("/api/booking-requests")
 	{
@@ -26,8 +26,8 @@ func BookingRequestRoutes(router *gin.Engine, bookingRequestController controlle
 		// 	adminBookingRequestRoutes.PATCH("/:id/reject", bookingRequestController.Reject)
 		// }
 		// For simplicity now, adding them directly. Consider authorization middleware for these.
-		bookingRequestRoutes.PATCH("/:id/approve", middleware.Authenticate(), middleware.AuthorizeRole([]string{"admin", "departemen"}), bookingRequestController.Approve)
-		bookingRequestRoutes.PATCH("/:id/reject", middleware.Authenticate(), middleware.AuthorizeRole([]string{"admin", "departemen"}), bookingRequestController.Reject)
+		bookingRequestRoutes.PATCH("/:id/approve", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Approve)
+		bookingRequestRoutes.PATCH("/:id/reject", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Reject)
 
 	}
 }

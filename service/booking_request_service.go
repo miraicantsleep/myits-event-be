@@ -67,7 +67,7 @@ func (s *bookingRequestService) CreateBookingRequest(ctx context.Context, req dt
 		// Assuming RoomResponse can be created from entity.Room
 		// This might need adjustment based on actual RoomResponse structure and how department name is fetched
 		roomResponses = append(roomResponses, dto.RoomResponse{
-			ID: room.ID.String(),
+			ID:   room.ID.String(),
 			Name: room.Name,
 			// Department: room.Department.Name, // This requires Department to be preloaded or fetched
 			Capacity: room.Capacity,
@@ -75,14 +75,13 @@ func (s *bookingRequestService) CreateBookingRequest(ctx context.Context, req dt
 	}
 
 	// 2. Fetch event details (optional, for response enrichment)
-	event, err := s.eventRepo.GetEventByID(ctx, tx, req.EventID.String()) // Assuming GetEventByID takes string and tx
+	event, err := s.eventRepo.GetEventById(ctx, tx, req.EventID.String()) // Assuming GetEventByID takes string and tx
 	if err != nil {
 		// Decide if this is a critical error. If event name in response is nice-to-have, maybe log and continue.
 		// For now, let's treat it as important for the response.
 		tx.Rollback()
 		return response, err
 	}
-
 
 	bookingRequest := entity.BookingRequest{
 		EventID: req.EventID,
@@ -131,7 +130,7 @@ func (s *bookingRequestService) GetBookingRequestByID(ctx context.Context, id st
 		// This part might need adjustment for fetching Department.Name for each room
 		// For simplicity, assuming Room entity has Department preloaded or RoomResponse doesn't strictly need it here
 		roomResponses = append(roomResponses, dto.RoomResponse{
-			ID: room.ID.String(),
+			ID:   room.ID.String(),
 			Name: room.Name,
 			// Department: room.Department.Name, // This requires Department to be preloaded or fetched in GetBookingRequestByID
 			Capacity: room.Capacity,
@@ -160,7 +159,7 @@ func (s *bookingRequestService) GetAllBookingRequests(ctx context.Context) ([]dt
 		var roomResponses []dto.RoomResponse
 		for _, room := range br.Rooms {
 			roomResponses = append(roomResponses, dto.RoomResponse{
-				ID: room.ID.String(),
+				ID:   room.ID.String(),
 				Name: room.Name,
 				// Department: room.Department.Name, // Requires preloading
 				Capacity: room.Capacity,
