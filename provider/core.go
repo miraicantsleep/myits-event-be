@@ -31,4 +31,5 @@ func RegisterDependencies(injector *do.Injector) {
 	ProvideEventDependencies(injector, db, jwtService)
 	ProvideRoomDependencies(injector, db, jwtService)
 	ProvideInvitationDependencies(injector, db, jwtService)
+	ProvideBookingRequestDependencies(injector, db, jwtService)
 }

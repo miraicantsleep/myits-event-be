@@ -11,7 +11,7 @@ type BookingRequest struct {
 	EventID     uuid.UUID `gorm:"type:uuid;not null" json:"event_id"`
 	Event       Event     `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"event"`
 	RequestedAt time.Time `gorm:"type:timestamp;not null;default:current_timestamp" json:"requested_at"`
-	Status      string    `gorm:"type:varchar(20);not null;default:'pending'" json:"status" validate:"required,oneof=pending approved rejected"`
+	Status      string    `gorm:"type:booking_status;not null;default:'pending'" json:"status" validate:"required,oneof=pending approved rejected"`
 	Rooms       []Room    `gorm:"many2many:booking_request_room" json:"rooms"`
 	Timestamp
 }

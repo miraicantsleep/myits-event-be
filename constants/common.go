@@ -14,4 +14,16 @@ const (
 
 	DB         = "db"
 	JWTService = "JWTService"
+
+	// Booking Request
+	BookingRequestRepository = "BookingRequestRepository"
+	BookingRequestService    = "BookingRequestService"
+	BookingRequestController = "BookingRequestController"
+
+	// Event
+	EventRepository = "EventRepository"
+	EventService    = "EventService"
+
+	//Room
+	RoomRepository = "RoomRepository"
 )

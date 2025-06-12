@@ -19,6 +19,9 @@ func Migrate(db *gorm.DB) error {
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rsvp_status') THEN
 				CREATE TYPE rsvp_status AS ENUM ('accepted', 'declined', 'pending');
 			END IF;
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
+				CREATE TYPE booking_status AS ENUM ('pending', 'approved', 'rejected');
+			END IF;
 		END
 		$$;
 	`).Error
@@ -26,7 +29,6 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
-	// SQL for QR Code generation function and trigger
 	qrCodeFunctionSQL := `
 	CREATE OR REPLACE FUNCTION generate_user_invitation_qr_code()
 	RETURNS TRIGGER AS $$
