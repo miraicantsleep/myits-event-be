@@ -15,6 +15,7 @@ type (
 		Create(ctx *gin.Context)
 		GetInvitationByID(ctx *gin.Context)
 		GetInvitationByEventID(ctx *gin.Context)
+		GetInvitationByUserID(ctx *gin.Context)
 		GetAllInvitations(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
@@ -87,6 +88,28 @@ func (c *invitationController) GetInvitationByEventID(ctx *gin.Context) {
 		return
 	}
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_INVITATION_BY_EVENT_ID, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetInvitationByUserID handles HTTP requests to get invitations for a specific user
+func (c *invitationController) GetInvitationByUserID(ctx *gin.Context) {
+	// Get user ID from the URL parameter
+	userID := ctx.Param("userId")
+	if userID == "" {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_INVITATION_BY_USER_ID, "User ID is required", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	// Call the service
+	invitations, err := c.invitationService.GetInvitationByUserID(ctx.Request.Context(), userID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_INVITATION_BY_USER_ID, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_INVITATION_BY_USER_ID, invitations)
 	ctx.JSON(http.StatusOK, res)
 }
 

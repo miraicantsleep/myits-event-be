@@ -12,6 +12,7 @@ const (
 	MESSAGE_SUCCESS_UPDATE_INVITATION          = "Success update invitation"
 	MESSAGE_SUCCESS_DELETE_INVITATION          = "Success delete invitation"
 	MESSAGE_SUCCESS_GET_INVITATION_BY_EVENT_ID = "Success get invitation by event id"
+	MESSAGE_SUCCESS_GET_INVITATION_BY_USER_ID  = "Success get invitation by user id"
 
 	// Failed messages
 	MESSAGE_FAILED_CREATE_INVITATION          = "Failed create invitation"
@@ -20,12 +21,14 @@ const (
 	MESSAGE_FAILED_UPDATE_INVITATION          = "Failed update invitation"
 	MESSAGE_FAILED_DELETE_INVITATION          = "Failed delete invitation"
 	MESSAGE_FAILED_GET_INVITATION_BY_EVENT_ID = "Failed get invitation by event id"
+	MESSAGE_FAILED_GET_INVITATION_BY_USER_ID  = "Failed get invitation by user id"
 )
 
 var (
 	ErrCreateInvitation            = errors.New("failed to create invitation")
 	ErrGetInvitationByID           = errors.New("failed to get invitation by id")
 	ErrGetInvitationByEventID      = errors.New("failed to get invitation by event id")
+	ErrGetInvitationByUserID       = errors.New("failed to get invitation by user id")
 	ErrGetAllInvitations           = errors.New("failed to get all invitations")
 	ErrUpdateInvitation            = errors.New("failed to update invitation")
 	ErrInvitationNotFound          = errors.New("invitation not found")

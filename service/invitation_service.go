@@ -21,6 +21,7 @@ type (
 		Create(ctx context.Context, req dto.CreateInvitationRequest) (dto.CreateInvitationResponse, error)
 		GetInvitationByID(ctx context.Context, invitationID string) ([]dto.InvitationResponse, error)
 		GetInvitationByEventID(ctx context.Context, eventID string) ([]dto.InvitationResponse, error)
+		GetInvitationByUserID(ctx context.Context, userID string) ([]dto.InvitationResponse, error)
 		GetAllInvitations(ctx context.Context) ([]dto.InvitationResponse, error)
 		Update(ctx context.Context, invitationID string, req dto.UpdateInvitationRequest) (dto.InvitationResponse, error)
 		Delete(ctx context.Context, invitationID string) error
@@ -288,7 +289,7 @@ func (s *invitationService) ScanQRCode(ctx context.Context, qrCode string) (dto.
 
 	return dto.ScanQRCodeResponse{
 		UserID:     updatedUserInvitation.UserID.String(),
-		UserName:   userName, // This might be empty if user details are not preloaded in GetInvitationByID's Users
+		UserName:   userName,       // This might be empty if user details are not preloaded in GetInvitationByID's Users
 		EventName:  inv.Event.Name, // Relies on Event being preloaded in GetInvitationByID
 		AttendedAt: updatedUserInvitation.AttendedAt.Format(time.RFC3339),
 		Message:    "Attendance marked successfully",
@@ -330,4 +331,25 @@ func (s *invitationService) ProcessRSVP(ctx context.Context, qrCodeToken string,
 
 	log.Printf("RSVP successful for token %s, new status: %s", qrCodeToken, newRsvpStatus)
 	return nil // Success
+}
+
+// GetInvitationByUserID retrieves all invitations for a specific user
+func (s *invitationService) GetInvitationByUserID(ctx context.Context, userID string) ([]dto.InvitationResponse, error) {
+	// Parse the user ID
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get invitations from repository
+	invitations, err := s.invitationRepo.GetInvitationByUserId(ctx, nil, uid)
+	if err != nil {
+		return nil, dto.ErrGetInvitationByUserID
+	}
+
+	if len(invitations) == 0 {
+		return []dto.InvitationResponse{}, nil
+	}
+
+	return invitations, nil
 }

@@ -14,6 +14,7 @@ type (
 		Create(ctx context.Context, tx *gorm.DB, invitation entity.Invitation) (entity.Invitation, error)
 		GetInvitationByID(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) (entity.Invitation, error)
 		GetInvitationByEvent(ctx context.Context, tx *gorm.DB, eventID uuid.UUID) ([]dto.InvitationResponse, error)
+		GetInvitationByUserId(ctx context.Context, tx *gorm.DB, userID uuid.UUID) ([]dto.InvitationResponse, error)
 		GetAllUserInvitations(ctx context.Context, tx *gorm.DB) ([]entity.Invitation, error)
 		Update(ctx context.Context, tx *gorm.DB, invitation entity.Invitation) (entity.Invitation, error)
 		Delete(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) error
@@ -190,4 +191,30 @@ func (r *invitationRepository) UpdateUserInvitation(ctx context.Context, tx *gor
 		return entity.UserInvitation{}, err
 	}
 	return userInvitation, nil
+}
+
+// GetInvitationByUserId retrieves all invitations for a specific user
+func (r *invitationRepository) GetInvitationByUserId(ctx context.Context, tx *gorm.DB, userID uuid.UUID) ([]dto.InvitationResponse, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var resp []dto.InvitationResponse
+	err := tx.WithContext(ctx).
+		Table("invitations").
+		Select(
+			"invitations.id AS id",
+			"events.name AS event_name",
+			"events.id AS event_id",
+			"events.start_time AS event_start_time",
+			"events.end_time AS event_end_time",
+			"user_invitation.invited_at AS invited_at",
+			"user_invitation.rsvp_status AS rsvp_status",
+			"user_invitation.rsvp_at AS rsvp_at",
+			"user_invitation.attended_at AS attended_at",
+		).
+		Joins("JOIN events ON events.id = invitations.event_id").
+		Joins("JOIN user_invitation ON user_invitation.invitation_id = invitations.id").
+		Where("user_invitation.user_id = ?", userID).
+		Scan(&resp).Error
+	return resp, err
 }
