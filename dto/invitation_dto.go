@@ -72,5 +72,5 @@ type InvitationResponse struct {
 	RSVPStatus string `json:"rsvp_status"`
 	RsvpAt     string `json:"rsvp_at,omitempty"`
 	AttendedAt string `json:"attended_at,omitempty"`
-	Token      string `json:"token,omitempty"`
+	QRCode     string `json:"qr_code,omitempty"`
 }

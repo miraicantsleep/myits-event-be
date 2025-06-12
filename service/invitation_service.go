@@ -205,7 +205,7 @@ func (s *invitationService) GetInvitationByID(ctx context.Context, invitationID 
 			Name:       u.Name,
 			InvitedAt:  now,
 			RSVPStatus: entity.RSVPStatusPending,
-			Token:      userInv.QRCode,
+			QRCode:     userInv.QRCode,
 		}
 	}
 	return resp, nil
@@ -351,6 +351,7 @@ func (s *invitationService) GetInvitationByUserID(ctx context.Context, userID st
 	if err != nil {
 		return nil, dto.ErrGetInvitationByUserID
 	}
+	log.Println(invitations)
 
 	if len(invitations) == 0 {
 		return []dto.InvitationResponse{}, nil

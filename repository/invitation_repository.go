@@ -211,6 +211,7 @@ func (r *invitationRepository) GetInvitationByUserId(ctx context.Context, tx *go
 			"user_invitation.rsvp_status AS rsvp_status",
 			"user_invitation.rsvp_at AS rsvp_at",
 			"user_invitation.attended_at AS attended_at",
+			"user_invitation.qr_code AS qr_code",
 		).
 		Joins("JOIN events ON events.id = invitations.event_id").
 		Joins("JOIN user_invitation ON user_invitation.invitation_id = invitations.id").
