@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/miraicantsleep/myits-event-be/dto"
@@ -69,10 +70,11 @@ func (s *roomService) Create(ctx context.Context, req dto.RoomCreateRequest, use
 	}
 
 	response := dto.RoomResponse{
-		ID:         result.ID.String(),
-		Name:       result.Name,
-		Department: department.Name,
-		Capacity:   result.Capacity,
+		ID:           result.ID.String(),
+		Name:         result.Name,
+		Department:   department.Name,
+		DepartmentID: result.DepartmentID.String(),
+		Capacity:     result.Capacity,
 	}
 	return response, nil
 }
@@ -81,6 +83,7 @@ func (s *roomService) GetRoomByID(ctx context.Context, id string) (dto.RoomRespo
 	if id == "" {
 		return dto.RoomResponse{}, errors.New("room ID is required")
 	}
+	log.Println("GetRoomByID called with ID:", id)
 	result, err := s.roomRepository.GetRoomByID(ctx, id)
 	if err != nil {
 		return dto.RoomResponse{}, err
@@ -93,10 +96,11 @@ func (s *roomService) GetRoomByID(ctx context.Context, id string) (dto.RoomRespo
 	}
 
 	response := dto.RoomResponse{
-		ID:         result.ID.String(),
-		Name:       result.Name,
-		Department: department.Name,
-		Capacity:   result.Capacity,
+		ID:           result.ID.String(),
+		Name:         result.Name,
+		Department:   department.Name,
+		DepartmentID: result.DepartmentID.String(),
+		Capacity:     result.Capacity,
 	}
 	return response, nil
 }
@@ -114,10 +118,11 @@ func (s *roomService) GetAllRoom(ctx context.Context) ([]dto.RoomResponse, error
 			return nil, err
 		}
 		response = append(response, dto.RoomResponse{
-			ID:         room.ID.String(),
-			Name:       room.Name,
-			Department: department.Name,
-			Capacity:   room.Capacity,
+			ID:           room.ID.String(),
+			Name:         room.Name,
+			Department:   department.Name,
+			DepartmentID: room.DepartmentID.String(),
+			Capacity:     room.Capacity,
 		})
 	}
 	return response, nil
@@ -141,10 +146,11 @@ func (s *roomService) Update(ctx context.Context, id string, req dto.RoomUpdateR
 	}
 
 	response := dto.RoomResponse{
-		ID:         result.ID.String(),
-		Name:       result.Name,
-		Department: department.Name,
-		Capacity:   result.Capacity,
+		ID:           result.ID.String(),
+		Name:         result.Name,
+		Department:   department.Name,
+		DepartmentID: result.DepartmentID.String(),
+		Capacity:     result.Capacity,
 	}
 	return response, nil
 }
@@ -170,10 +176,11 @@ func (s *roomService) GetRoomByName(ctx context.Context, name string) (dto.RoomR
 	}
 
 	response := dto.RoomResponse{
-		ID:         result.ID.String(),
-		Name:       result.Name,
-		Department: department.Name,
-		Capacity:   result.Capacity,
+		ID:           result.ID.String(),
+		Name:         result.Name,
+		Department:   department.Name,
+		DepartmentID: result.DepartmentID.String(),
+		Capacity:     result.Capacity,
 	}
 	return response, nil
 }

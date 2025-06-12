@@ -47,7 +47,18 @@ func (r *roomRepository) Create(ctx context.Context, room entity.Room) (entity.R
 }
 
 func (r *roomRepository) GetRoomByID(ctx context.Context, id string) (entity.Room, error) {
-	return entity.Room{}, nil
+	tx := r.db
+	if tx == nil {
+		return entity.Room{}, dto.ErrGetRoomByID
+	}
+	var room entity.Room
+	if err := tx.WithContext(ctx).Where("id = ?", id).First(&room).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.Room{}, dto.ErrRoomNotFound
+		}
+		return entity.Room{}, err
+	}
+	return room, nil
 }
 
 func (r *roomRepository) GetRoomByName(ctx context.Context, name string) (entity.Room, error) {

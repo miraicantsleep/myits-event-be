@@ -21,5 +21,6 @@ func User(route *gin.Engine, injector *do.Injector) {
 		routes.DELETE("/delete", middleware.Authenticate(jwtService), userController.Delete)
 		routes.PATCH("/update", middleware.Authenticate(jwtService), userController.Update)
 		routes.GET("/me", middleware.Authenticate(jwtService), userController.Me)
+		routes.GET("/all", middleware.Authenticate(jwtService), userController.GetAllUser)
 	}
 }

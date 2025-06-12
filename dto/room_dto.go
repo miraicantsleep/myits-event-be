@@ -45,9 +45,10 @@ type (
 	}
 
 	RoomResponse struct {
-		ID         string `json:"id"`
-		Name       string `json:"name"`
-		Department string `json:"department"`
-		Capacity   int    `json:"capacity"`
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		Department   string `json:"department"`
+		DepartmentID string `json:"department_id"`
+		Capacity     int    `json:"capacity"`
 	}
 )

@@ -15,6 +15,7 @@ type (
 			ctx context.Context,
 			tx *gorm.DB,
 			req dto.PaginationRequest,
+			user_role string,
 		) (dto.GetAllUserRepositoryResponse, error)
 		GetUserById(ctx context.Context, tx *gorm.DB, userId string) (entity.User, error)
 		GetUserByEmail(ctx context.Context, tx *gorm.DB, email string) (entity.User, error)
@@ -50,6 +51,7 @@ func (r *userRepository) GetAllUserWithPagination(
 	ctx context.Context,
 	tx *gorm.DB,
 	req dto.PaginationRequest,
+	user_role string,
 ) (dto.GetAllUserRepositoryResponse, error) {
 	if tx == nil {
 		tx = r.db
@@ -64,6 +66,9 @@ func (r *userRepository) GetAllUserWithPagination(
 	query := tx.WithContext(ctx).Model(&entity.User{})
 	if req.Search != "" {
 		query = query.Where("name LIKE ?", "%"+req.Search+"%")
+	}
+	if user_role != "" {
+		query = query.Where("role = ?", user_role)
 	}
 
 	if err := query.Count(&count).Error; err != nil {

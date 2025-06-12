@@ -15,7 +15,7 @@ import (
 type (
 	UserService interface {
 		Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error)
-		GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.UserPaginationResponse, error)
+		GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest, user_role string) (dto.UserPaginationResponse, error)
 		GetUserById(ctx context.Context, userId string) (dto.UserResponse, error)
 		GetUserByEmail(ctx context.Context, email string) (dto.UserResponse, error)
 		Update(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error)
@@ -89,8 +89,9 @@ func (s *userService) Register(ctx context.Context, req dto.UserCreateRequest) (
 func (s *userService) GetAllUserWithPagination(
 	ctx context.Context,
 	req dto.PaginationRequest,
+	user_role string,
 ) (dto.UserPaginationResponse, error) {
-	dataWithPaginate, err := s.userRepo.GetAllUserWithPagination(ctx, nil, req)
+	dataWithPaginate, err := s.userRepo.GetAllUserWithPagination(ctx, nil, req, user_role)
 	if err != nil {
 		return dto.UserPaginationResponse{}, err
 	}
