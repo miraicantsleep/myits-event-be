@@ -10,12 +10,8 @@ type BookingRequestCreateRequest struct {
 type BookingRequestResponse struct {
 	ID          uuid.UUID      `json:"id"`
 	EventID     uuid.UUID      `json:"event_id"`
-	EventName   string         `json:"event_name"` // Assuming we'll fetch event name
+	EventName   string         `json:"event_name"`
 	RequestedAt string         `json:"requested_at"`
 	Status      string         `json:"status"`
-	Rooms       []RoomResponse `json:"rooms"` // Reusing existing RoomResponse if suitable
+	Rooms       []RoomResponse `json:"rooms"`
 }
-
-// MinimalRoomResponse for embedding in BookingRequestResponse to avoid circular dependencies if RoomResponse imports Booking-related DTOs.
-// Or, ensure RoomResponse is simple enough. For now, let's assume RoomResponse is suitable.
-// If not, we might need a specific RoomInfoDTO here.

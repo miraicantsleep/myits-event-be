@@ -2,32 +2,23 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/miraicantsleep/myits-event-be/constants"
 	"github.com/miraicantsleep/myits-event-be/controller"
 	"github.com/miraicantsleep/myits-event-be/middleware"
-	"github.com/miraicantsleep/myits-event-be/service" // Not directly needed here, but good for context
-	// "gorm.io/gorm" // Not directly needed here
+	"github.com/miraicantsleep/myits-event-be/service"
+	"github.com/samber/do"
 )
 
-func BookingRequestRoutes(router *gin.Engine, bookingRequestController controller.BookingRequestController, jwtService service.JWTService /*db *gorm.DB*/) {
-	// authMiddleware := middleware.Authenticate(jwtService, db) // Assuming middleware.Authenticate exists
-	bookingRequestRoutes := router.Group("/api/booking-requests")
+func BookingRequest(route *gin.Engine, injector *do.Injector) {
+	jwtService := do.MustInvokeNamed[service.JWTService](injector, constants.JWTService)
+	bookingRequestController := do.MustInvoke[controller.BookingRequestController](injector)
+
+	routes := route.Group("/api/booking-request")
 	{
-		// bookingRequestRoutes.Use(authMiddleware) // Apply auth middleware to all booking request routes if needed
-		bookingRequestRoutes.POST("/", bookingRequestController.Create)
-		bookingRequestRoutes.GET("/", bookingRequestController.GetAll)
-		bookingRequestRoutes.GET("/:id", bookingRequestController.GetByID)
-
-		// Routes for approval and rejection - might need specific authorization (e.g., admin only)
-		// One way to handle this is to have a separate group with different middleware
-		// adminBookingRequestRoutes := router.Group("/api/admin/booking-requests")
-		// adminBookingRequestRoutes.Use(authMiddleware, middleware.AuthorizeRole("admin")) // Example for admin-only
-		// {
-		// 	adminBookingRequestRoutes.PATCH("/:id/approve", bookingRequestController.Approve)
-		// 	adminBookingRequestRoutes.PATCH("/:id/reject", bookingRequestController.Reject)
-		// }
-		// For simplicity now, adding them directly. Consider authorization middleware for these.
-		bookingRequestRoutes.PATCH("/:id/approve", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Approve)
-		bookingRequestRoutes.PATCH("/:id/reject", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Reject)
-
+		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa"), bookingRequestController.Create)
+		routes.GET("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin", "departemen"), bookingRequestController.GetByID)
+		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin", "departemen"), bookingRequestController.GetAll)
+		routes.PATCH("/:id/approve", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Approve)
+		routes.PATCH("/:id/reject", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Reject)
 	}
 }

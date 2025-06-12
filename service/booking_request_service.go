@@ -11,31 +11,36 @@ import (
 	"gorm.io/gorm"
 )
 
-type BookingRequestService interface {
-	CreateBookingRequest(ctx context.Context, req dto.BookingRequestCreateRequest) (dto.BookingRequestResponse, error)
-	GetBookingRequestByID(ctx context.Context, id string) (dto.BookingRequestResponse, error)
-	GetAllBookingRequests(ctx context.Context) ([]dto.BookingRequestResponse, error)
-	ApproveBookingRequest(ctx context.Context, id string) error
-	RejectBookingRequest(ctx context.Context, id string) error
-}
+type (
+	BookingRequestService interface {
+		CreateBookingRequest(ctx context.Context, req dto.BookingRequestCreateRequest) (dto.BookingRequestResponse, error)
+		GetBookingRequestByID(ctx context.Context, id string) (dto.BookingRequestResponse, error)
+		GetAllBookingRequests(ctx context.Context) ([]dto.BookingRequestResponse, error)
+		ApproveBookingRequest(ctx context.Context, id string) error
+		RejectBookingRequest(ctx context.Context, id string) error
+	}
 
-type bookingRequestService struct {
-	bookingRequestRepo repository.BookingRequestRepository
-	roomRepo           repository.RoomRepository
-	eventRepo          repository.EventRepository // Assuming an EventRepository exists
-	db                 *gorm.DB                   // For transactions
-}
+	bookingRequestService struct {
+		bookingRequestRepo repository.BookingRequestRepository
+		roomRepo           repository.RoomRepository
+		eventRepo          repository.EventRepository
+		jwtService         JWTService
+		db                 *gorm.DB
+	}
+)
 
 func NewBookingRequestService(
-	brRepo repository.BookingRequestRepository,
+	bookingRequestRepo repository.BookingRequestRepository,
 	roomRepo repository.RoomRepository,
-	eventRepo repository.EventRepository, // Add eventRepo to constructor
+	eventRepo repository.EventRepository,
+	jwtService JWTService,
 	db *gorm.DB,
 ) BookingRequestService {
 	return &bookingRequestService{
-		bookingRequestRepo: brRepo,
+		bookingRequestRepo: bookingRequestRepo,
 		roomRepo:           roomRepo,
 		eventRepo:          eventRepo,
+		jwtService:         jwtService,
 		db:                 db,
 	}
 }
@@ -56,29 +61,22 @@ func (s *bookingRequestService) CreateBookingRequest(ctx context.Context, req dt
 		}
 	}()
 
-	// 1. Fetch and validate rooms
 	for _, roomID := range req.RoomIDs {
-		room, err := s.roomRepo.GetRoomByID(ctx, roomID.String()) // Assuming GetRoomByID takes string
+		room, err := s.roomRepo.GetRoomByID(ctx, roomID.String())
 		if err != nil {
 			tx.Rollback()
-			return response, err // Consider specific error for room not found
+			return response, err
 		}
 		roomsForBooking = append(roomsForBooking, room)
-		// Assuming RoomResponse can be created from entity.Room
-		// This might need adjustment based on actual RoomResponse structure and how department name is fetched
 		roomResponses = append(roomResponses, dto.RoomResponse{
-			ID:   room.ID.String(),
-			Name: room.Name,
-			// Department: room.Department.Name, // This requires Department to be preloaded or fetched
+			ID:       room.ID.String(),
+			Name:     room.Name,
 			Capacity: room.Capacity,
 		})
 	}
 
-	// 2. Fetch event details (optional, for response enrichment)
 	event, err := s.eventRepo.GetEventById(ctx, tx, req.EventID.String()) // Assuming GetEventByID takes string and tx
 	if err != nil {
-		// Decide if this is a critical error. If event name in response is nice-to-have, maybe log and continue.
-		// For now, let's treat it as important for the response.
 		tx.Rollback()
 		return response, err
 	}
@@ -86,8 +84,7 @@ func (s *bookingRequestService) CreateBookingRequest(ctx context.Context, req dt
 	bookingRequest := entity.BookingRequest{
 		EventID: req.EventID,
 		Rooms:   roomsForBooking,
-		Status:  "pending", // Default status
-		// RequestedAt will be set by DB default or Timestamp struct
+		Status:  "pending",
 	}
 
 	err = s.bookingRequestRepo.CreateBookingRequest(ctx, tx, &bookingRequest)

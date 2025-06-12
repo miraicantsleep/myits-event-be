@@ -19,13 +19,11 @@ type BookingRequestController interface {
 
 type bookingRequestController struct {
 	bookingRequestService service.BookingRequestService
-	// jwtService service.JWTService // Uncomment if auth is needed for these routes
 }
 
-func NewBookingRequestController(brService service.BookingRequestService /*, jwtService service.JWTService*/) BookingRequestController {
+func NewBookingRequestController(brService service.BookingRequestService) BookingRequestController {
 	return &bookingRequestController{
 		bookingRequestService: brService,
-		// jwtService: jwtService, // Uncomment if auth is needed
 	}
 }
 
@@ -37,12 +35,10 @@ func (c *bookingRequestController) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Get user ID from context if needed for authorization or logging
 	// userID := ctx.MustGet("user_id").(string)
 
 	result, err := c.bookingRequestService.CreateBookingRequest(ctx.Request.Context(), req)
 	if err != nil {
-		// Consider more specific error handling based on service errors
 		res := utils.BuildResponseFailed("Failed to create booking request", err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, res)
 		return

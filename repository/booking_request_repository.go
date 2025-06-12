@@ -8,28 +8,33 @@ import (
 	"gorm.io/gorm"
 )
 
-type BookingRequestRepository interface {
-	CreateBookingRequest(ctx context.Context, tx *gorm.DB, bookingRequest *entity.BookingRequest) error
-	GetBookingRequestByID(ctx context.Context, tx *gorm.DB, id uuid.UUID) (*entity.BookingRequest, error)
-	GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]entity.BookingRequest, error)
-	UpdateBookingRequestStatus(ctx context.Context, tx *gorm.DB, id uuid.UUID, status string) error
-	// Add other necessary methods like ListByEventID, ListByRoomID, etc. if needed later
-}
+type (
+	BookingRequestRepository interface {
+		CreateBookingRequest(ctx context.Context, tx *gorm.DB, bookingRequest *entity.BookingRequest) error
+		GetBookingRequestByID(ctx context.Context, tx *gorm.DB, id uuid.UUID) (*entity.BookingRequest, error)
+		GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]entity.BookingRequest, error)
+		UpdateBookingRequestStatus(ctx context.Context, tx *gorm.DB, id uuid.UUID, status string) error
+	}
 
-type bookingRequestRepository struct {
-	db *gorm.DB // Main DB connection, transactions will be passed or handled within methods
-}
+	bookingRequestRepository struct {
+		db *gorm.DB // Main DB connection, transactions will be passed or handled within methods
+	}
+)
 
 func NewBookingRequestRepository(db *gorm.DB) BookingRequestRepository {
 	return &bookingRequestRepository{db: db}
 }
 
-func (r *bookingRequestRepository) CreateBookingRequest(ctx context.Context, tx *gorm.DB, bookingRequest *entity.BookingRequest) error {
+func (r *bookingRequestRepository) CreateBookingRequest(ctx context.Context, tx *gorm.DB, br *entity.BookingRequest) error {
 	db := r.db
 	if tx != nil {
 		db = tx
 	}
-	return db.WithContext(ctx).Create(bookingRequest).Error
+	err := db.WithContext(ctx).Create(br).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *bookingRequestRepository) GetBookingRequestByID(ctx context.Context, tx *gorm.DB, id uuid.UUID) (*entity.BookingRequest, error) {
