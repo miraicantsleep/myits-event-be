@@ -120,5 +120,56 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	ormawaEventsView := `
+	-- Events created by "Ormawa" View
+	CREATE OR REPLACE VIEW ormawa_events_view AS
+	SELECT
+		e.id AS event_id,
+		e.name AS event_name,
+		e.description,
+		e.start_time,
+		e.end_time,
+		u.id AS creator_id,
+		u.name AS creator_name
+	FROM
+		events e
+	JOIN
+		users u ON e.created_by = u.id
+	WHERE
+		u.role = 'ormawa' AND e.deleted_at IS NULL;
+	`
+	if err := db.Exec(ormawaEventsView).Error; err != nil {
+		return err
+	}
+
+	if err := db.Exec(ormawaEventsView).Error; err != nil {
+		return err
+	}
+
+	userAttendanceView := `
+	-- User Attendance View
+	CREATE OR REPLACE VIEW user_attendance_view AS
+	SELECT
+		u.id as user_id,
+		u.name as user_name,
+		e.id as event_id,
+		e.name as event_name,
+		ui.attended_at
+	FROM
+		users u
+	JOIN
+		user_invitation ui ON u.id = ui.user_id
+	JOIN
+		invitations i ON ui.invitation_id = i.id
+	JOIN
+		events e ON i.event_id = e.id
+	WHERE 
+		ui.attended_at IS NOT NULL
+	AND
+		u.deleted_at IS NULL;
+	`
+	if err := db.Exec(userAttendanceView).Error; err != nil {
+		return err
+	}
 	return nil
 }
