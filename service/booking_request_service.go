@@ -16,7 +16,7 @@ type (
 	BookingRequestService interface {
 		CreateBookingRequest(ctx context.Context, req dto.BookingRequestCreateRequest) (dto.BookingRequestResponse, error)
 		GetBookingRequestByID(ctx context.Context, id string) (dto.BookingRequestResponse, error)
-		GetAllBookingRequests(ctx context.Context) ([]dto.BookingRequestResponse, error)
+		GetAllBookingRequests(ctx context.Context) ([]dto.BookingDetailResponse, error)
 		UpdateBookingRequest(ctx context.Context, id string, req dto.BookingRequestUpdateRequest, role string) (dto.BookingRequestResponse, error)
 		DeleteBookingRequest(ctx context.Context, id string) error
 		ApproveBookingRequest(ctx context.Context, id string) error
@@ -143,32 +143,45 @@ func (s *bookingRequestService) GetBookingRequestByID(ctx context.Context, id st
 	return response, nil
 }
 
-func (s *bookingRequestService) GetAllBookingRequests(ctx context.Context) ([]dto.BookingRequestResponse, error) {
-	var responses []dto.BookingRequestResponse
-	bookingRequests, err := s.bookingRequestRepo.GetAllBookingRequests(ctx, nil)
+func (s *bookingRequestService) GetAllBookingRequests(ctx context.Context) ([]dto.BookingDetailResponse, error) {
+	flatBookingData, err := s.bookingRequestRepo.GetAllBookingRequests(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, br := range bookingRequests {
-		var roomResponses []dto.RoomResponse
-		for _, room := range br.Rooms {
-			roomResponses = append(roomResponses, dto.RoomResponse{
-				ID:       room.ID.String(),
-				Name:     room.Name,
-				Capacity: room.Capacity,
-			})
+	// 2. Use a map to group the flat data into the nested structure.
+	bookingMap := make(map[uuid.UUID]*dto.BookingDetailResponse)
+
+	for _, record := range flatBookingData {
+		if _, exists := bookingMap[record.BookingID]; !exists {
+			// Create the parent booking object
+			bookingMap[record.BookingID] = &dto.BookingDetailResponse{
+				BookingID:     record.BookingID,
+				BookingStatus: record.BookingStatus,
+				EventID:       record.EventID,
+				EventName:     record.EventName,
+				RequestedBy:   record.RequestedBy,
+				Rooms:         []dto.RoomInfo{},
+			}
 		}
-		responses = append(responses, dto.BookingRequestResponse{
-			ID:          br.ID,
-			EventID:     br.EventID,
-			EventName:   br.Event.Name,
-			RequestedAt: br.RequestedAt.Format(time.RFC3339),
-			Status:      br.Status,
-			Rooms:       roomResponses,
-		})
+
+		// Add the room from the current row into the booking's "Rooms" slice
+		if record.RoomID != uuid.Nil {
+			room := dto.RoomInfo{
+				RoomID:   record.RoomID,
+				RoomName: record.RoomName,
+			}
+			bookingMap[record.BookingID].Rooms = append(bookingMap[record.BookingID].Rooms, room)
+		}
 	}
-	return responses, nil
+
+	// 3. Convert the map to a slice for the final response.
+	finalResponse := make([]dto.BookingDetailResponse, 0, len(bookingMap))
+	for _, booking := range bookingMap {
+		finalResponse = append(finalResponse, *booking)
+	}
+
+	return finalResponse, nil
 }
 
 func (s *bookingRequestService) UpdateBookingRequest(ctx context.Context, id string, req dto.BookingRequestUpdateRequest, role string) (dto.BookingRequestResponse, error) {

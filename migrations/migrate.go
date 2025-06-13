@@ -297,5 +297,30 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	createBookingWithRoomsView := `
+	CREATE OR REPLACE VIEW vw_booking_with_rooms AS
+	SELECT
+		br.id AS booking_id,
+		br.status AS booking_status,
+		e.id AS event_id,
+		e.name AS event_name,
+		r.id AS room_id,
+		r.name AS room_name,
+		u.name AS requested_by
+	FROM
+		booking_requests br
+	JOIN
+		events e ON br.event_id = e.id
+	JOIN
+		users u ON e.created_by = u.id
+	JOIN
+		booking_request_room brr ON br.id = brr.booking_request_id
+	JOIN
+		rooms r ON brr.room_id = r.id;
+	`
+	if err := db.Exec(createBookingWithRoomsView).Error; err != nil {
+		return err
+	}
+
 	return nil
 }

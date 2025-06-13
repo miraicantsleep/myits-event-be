@@ -40,3 +40,34 @@ type BookingRequestResponse struct {
 	Status      string         `json:"status"`
 	Rooms       []RoomResponse `json:"rooms"`
 }
+
+// Add/Replace these structs in the file
+
+// This DTO matches the FLAT output of the vw_booking_with_rooms view.
+// It does NOT have a "Rooms" slice. It has single room fields.
+type BookingWithRoomResponse struct {
+	BookingID     uuid.UUID `json:"booking_id"`
+	BookingStatus string    `json:"booking_status"`
+	EventID       uuid.UUID `json:"event_id"`
+	EventName     string    `json:"event_name"`
+	RoomID        uuid.UUID `json:"room_id"`   // Single Room ID
+	RoomName      string    `json:"room_name"` // Single Room Name
+	RequestedBy   string    `json:"requested_by"`
+}
+
+// This struct is for the FINAL NESTED JSON response.
+// This is the one that HAS the "Rooms" slice.
+type BookingDetailResponse struct {
+	BookingID     uuid.UUID  `json:"booking_id"`
+	BookingStatus string     `json:"booking_status"`
+	EventID       uuid.UUID  `json:"event_id"`
+	EventName     string     `json:"event_name"`
+	RequestedBy   string     `json:"requested_by"`
+	Rooms         []RoomInfo `json:"rooms"` // The array of rooms
+}
+
+// This struct represents a single room inside the BookingDetailResponse.
+type RoomInfo struct {
+	RoomID   uuid.UUID `json:"room_id"`
+	RoomName string    `json:"room_name"`
+}

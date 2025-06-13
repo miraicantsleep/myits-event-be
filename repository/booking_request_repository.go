@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/miraicantsleep/myits-event-be/dto"
 	"github.com/miraicantsleep/myits-event-be/entity"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,7 @@ type (
 	BookingRequestRepository interface {
 		CreateBookingRequest(ctx context.Context, tx *gorm.DB, bookingRequest *entity.BookingRequest) error
 		GetBookingRequestByID(ctx context.Context, tx *gorm.DB, id uuid.UUID) (*entity.BookingRequest, error)
-		GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]entity.BookingRequest, error)
+		GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]dto.BookingWithRoomResponse, error)
 		UpdateBookingRequest(ctx context.Context, tx *gorm.DB, bookingRequest *entity.BookingRequest) error
 		UpdateBookingRequestStatus(ctx context.Context, tx *gorm.DB, id uuid.UUID, status string) error
 		DeleteBookingRequest(ctx context.Context, tx *gorm.DB, id uuid.UUID) error
@@ -57,21 +58,18 @@ func (r *bookingRequestRepository) GetBookingRequestByID(ctx context.Context, tx
 	return &bookingRequest, nil
 }
 
-func (r *bookingRequestRepository) GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]entity.BookingRequest, error) {
-	var bookingRequests []entity.BookingRequest
+func (r *bookingRequestRepository) GetAllBookingRequests(ctx context.Context, tx *gorm.DB) ([]dto.BookingWithRoomResponse, error) {
+	var bookings []dto.BookingWithRoomResponse
 	db := r.db
 	if tx != nil {
 		db = tx
 	}
-	err := db.WithContext(ctx).
-		Joins("Event").
-		Joins("left join booking_request_room on booking_request_room.booking_request_id = booking_requests.id").
-		Joins("left join rooms on rooms.id = booking_request_room.room_id").
-		Find(&bookingRequests).Error
+
+	err := db.WithContext(ctx).Table("vw_booking_with_rooms").Find(&bookings).Error
 	if err != nil {
 		return nil, err
 	}
-	return bookingRequests, nil
+	return bookings, nil
 }
 
 func (r *bookingRequestRepository) UpdateBookingRequest(ctx context.Context, tx *gorm.DB, br *entity.BookingRequest) error {
