@@ -445,5 +445,54 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	validateEventTimeFunc := `
+	CREATE OR REPLACE FUNCTION validate_event_time()
+	RETURNS TRIGGER AS $$
+	BEGIN
+		IF NEW.end_time <= NEW.start_time THEN
+			RAISE EXCEPTION 'end time harus lebih besar dari start time';
+		END IF;
+		-- Jika valid, lanjutkan operasi INSERT atau UPDATE
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(validateEventTimeFunc).Error; err != nil {
+		return err
+	}
+
+	validateEventTimeTrigger := `
+	DROP TRIGGER IF EXISTS trg_validate_event_time ON events;
+	CREATE TRIGGER trg_validate_event_time
+	BEFORE INSERT OR UPDATE ON events
+	FOR EACH ROW
+	EXECUTE FUNCTION validate_event_time();
+	`
+	if err := db.Exec(validateEventTimeTrigger).Error; err != nil {
+		return err
+	}
+
+	calculateEventDurationFunc := `
+	CREATE OR REPLACE FUNCTION calculate_event_duration()
+	RETURNS TRIGGER AS $$
+	BEGIN
+		NEW.duration_in_minutes := EXTRACT(EPOCH FROM (NEW.end_time - NEW.start_time)) / 60;
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(calculateEventDurationFunc).Error; err != nil {
+		return err
+	}
+	calculateEventDurationTrigger := `
+	DROP TRIGGER IF EXISTS trg_set_event_duration ON events;
+	CREATE TRIGGER trg_set_event_duration
+	BEFORE INSERT OR UPDATE ON events
+	FOR EACH ROW
+	EXECUTE FUNCTION calculate_event_duration();
+	`
+	if err := db.Exec(calculateEventDurationTrigger).Error; err != nil {
+		return err
+	}
 	return nil
 }
