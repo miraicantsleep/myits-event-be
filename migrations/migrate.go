@@ -97,6 +97,10 @@ func Migrate(db *gorm.DB) error {
 		i.id AS id, 
 		e.id AS event_id,
 		e.name AS event_name,
+		e.description AS event_description,
+		e.start_time,
+		e.end_time,
+		e.deleted_at,
 		u.id AS user_id,
 		u.name AS user_name,
 		u.email AS user_email,
@@ -508,24 +512,20 @@ func Migrate(db *gorm.DB) error {
 	BEGIN
 		RETURN QUERY
 		SELECT
-			e.id,
-			e.name,
-			e.description,
-			e.start_time,
-			e.end_time,
-			ui.rsvp_status
+			f.event_id,
+			f.event_name,
+			f.event_description,
+			f.start_time,
+			f.end_time,
+			f.rsvp_status
 		FROM
-			events e
-		JOIN
-			invitations i ON e.id = i.event_id
-		JOIN
-			user_invitation ui ON i.id = ui.invitation_id
+			full_invitation_details f
 		WHERE
-			ui.user_id = p_user_id
-			AND e.start_time > NOW()
-			AND e.deleted_at IS NULL
+			f.user_id = p_user_id
+			AND f.start_time > NOW()
+			AND f.deleted_at IS NULL
 		ORDER BY
-			e.start_time ASC;
+			f.start_time ASC;
 	END;
 	$$ LANGUAGE plpgsql;
 	`
