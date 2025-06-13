@@ -105,7 +105,7 @@ func (r *eventRepository) GetEventByUserId(ctx context.Context, tx *gorm.DB, use
 	var events []entity.Event
 
 	if err := tx.WithContext(ctx).
-		Table("event_views").
+		Table("event_details").
 		Where("created_by = ?", userId).
 		Find(&events).Error; err != nil {
 		return nil, err

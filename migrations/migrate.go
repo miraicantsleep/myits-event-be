@@ -83,7 +83,8 @@ func Migrate(db *gorm.DB) error {
 			u.name AS creator_name,
 			e.created_at,
 			e.updated_at,
-			e.deleted_at
+			e.deleted_at,
+			e.created_by
 		FROM
 			events e
 		LEFT JOIN
