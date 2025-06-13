@@ -33,9 +33,6 @@ func Migrate(db *gorm.DB) error {
 	CREATE OR REPLACE FUNCTION generate_user_invitation_qr_code()
 	RETURNS TRIGGER AS $$
 	BEGIN
-	    -- Check if qr_code is NULL or an empty string, then generate.
-	    -- This allows for manually setting a QR code if ever needed,
-	    -- though typically it will be NULL on insert.
 	    IF NEW.qr_code IS NULL OR NEW.qr_code = '' THEN
 	        NEW.qr_code := uuid_generate_v4();
 	    END IF;
@@ -341,6 +338,110 @@ func Migrate(db *gorm.DB) error {
 		r.deleted_at IS NULL;
 	`
 	if err := db.Exec(roomDetailsView).Error; err != nil {
+		return err
+	}
+
+	setInvitedAtFunction := `
+	CREATE OR REPLACE FUNCTION fn_set_invited_at_timestamp()
+	RETURNS TRIGGER AS $$
+	BEGIN
+		-- Set kolom invited_at dengan waktu transaksi saat ini
+		NEW.invited_at := NOW();
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(setInvitedAtFunction).Error; err != nil {
+		return err
+	}
+
+	setInvitedAtTrigger := `
+	DROP TRIGGER IF EXISTS trg_auto_set_invited_at ON user_invitation;
+	CREATE TRIGGER trg_auto_set_invited_at
+	BEFORE INSERT ON user_invitation
+	FOR EACH ROW
+	EXECUTE FUNCTION fn_set_invited_at_timestamp();
+	`
+
+	if err := db.Exec(setInvitedAtTrigger).Error; err != nil {
+		return err
+	}
+
+	getEventByStatusFunc := `
+	CREATE OR REPLACE FUNCTION get_event_by_status(p_timeline_status TEXT)
+	RETURNS TABLE (
+		id uuid,
+		name character varying,
+		description text,
+		start_time timestamp,
+		end_time timestamp,
+		event_type event_type,
+		creator_name character varying
+	) AS $$
+	BEGIN
+		IF p_timeline_status = 'ongoing' THEN
+			RETURN QUERY
+			SELECT e.id, e.name, e.description, e.start_time, e.end_time, e.event_type, u.name
+			FROM events e
+			JOIN users u ON e.created_by = u.id
+			WHERE e.deleted_at IS NULL AND NOW() BETWEEN e.start_time AND e.end_time;
+
+
+		ELSIF p_timeline_status = 'upcoming' THEN
+			RETURN QUERY
+			SELECT e.id, e.name, e.description, e.start_time, e.end_time, e.event_type, u.name
+			FROM events e
+			JOIN users u ON e.created_by = u.id
+			WHERE e.deleted_at IS NULL AND e.start_time > NOW();
+
+
+		ELSIF p_timeline_status = 'finished' THEN
+			RETURN QUERY
+			SELECT e.id, e.name, e.description, e.start_time, e.end_time, e.event_type, u.name
+			FROM events e
+			JOIN users u ON e.created_by = u.id
+			WHERE e.deleted_at IS NULL AND e.end_time < NOW();
+
+
+		ELSE
+			RAISE EXCEPTION 'Invalid timeline status';
+		END IF;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+
+	if err := db.Exec(getEventByStatusFunc).Error; err != nil {
+		return err
+	}
+
+	isRoomAvailableFunc := `
+	CREATE OR REPLACE FUNCTION is_room_available(
+		p_room_id UUID,
+		p_start_time TIMESTAMP,
+		p_end_time TIMESTAMP
+	)
+	RETURNS BOOLEAN AS $$
+	DECLARE
+		is_available BOOLEAN;
+	BEGIN
+		SELECT NOT EXISTS (
+			SELECT 1
+			FROM booking_requests br
+			JOIN booking_request_room brr ON br.id = brr.booking_request_id
+			JOIN events e ON br.event_id = e.id
+			WHERE brr.room_id = p_room_id
+				AND br.status = 'approved'
+				AND br.deleted_at IS NULL
+				AND (p_start_time < e.end_time AND p_end_time > e.start_time)
+		) INTO is_available;
+
+
+		RETURN is_available;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+
+	if err := db.Exec(isRoomAvailableFunc).Error; err != nil {
 		return err
 	}
 
