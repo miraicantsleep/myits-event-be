@@ -45,7 +45,12 @@ func (r *bookingRequestRepository) GetBookingRequestByID(ctx context.Context, tx
 	if tx != nil {
 		db = tx
 	}
-	err := db.WithContext(ctx).Preload("Rooms").Preload("Event").First(&bookingRequest, "id = ?", id).Error
+	err := db.WithContext(ctx).
+		Joins("Event").
+		Joins("left join booking_request_room on booking_request_room.booking_request_id = booking_requests.id").
+		Joins("left join rooms on rooms.id = booking_request_room.room_id").
+		Where("booking_requests.id = ?", id).
+		First(&bookingRequest).Error
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +63,11 @@ func (r *bookingRequestRepository) GetAllBookingRequests(ctx context.Context, tx
 	if tx != nil {
 		db = tx
 	}
-	err := db.WithContext(ctx).Preload("Rooms").Preload("Event").Find(&bookingRequests).Error
+	err := db.WithContext(ctx).
+		Joins("Event").
+		Joins("left join booking_request_room on booking_request_room.booking_request_id = booking_requests.id").
+		Joins("left join rooms on rooms.id = booking_request_room.room_id").
+		Find(&bookingRequests).Error
 	if err != nil {
 		return nil, err
 	}
