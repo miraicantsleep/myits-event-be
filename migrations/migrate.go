@@ -494,5 +494,68 @@ func Migrate(db *gorm.DB) error {
 	if err := db.Exec(calculateEventDurationTrigger).Error; err != nil {
 		return err
 	}
+
+	getUserUpcomingEventsFunc := `
+	CREATE OR REPLACE FUNCTION get_user_upcoming_events(p_user_id UUID)
+	RETURNS TABLE (
+		event_id uuid,
+		event_name character varying,
+		event_description text,
+		event_start_time timestamp,
+		event_end_time timestamp,
+		rsvp_status rsvp_status
+	) AS $$
+	BEGIN
+		RETURN QUERY
+		SELECT
+			e.id,
+			e.name,
+			e.description,
+			e.start_time,
+			e.end_time,
+			ui.rsvp_status
+		FROM
+			events e
+		JOIN
+			invitations i ON e.id = i.event_id
+		JOIN
+			user_invitation ui ON i.id = ui.invitation_id
+		WHERE
+			ui.user_id = p_user_id
+			AND e.start_time > NOW()
+			AND e.deleted_at IS NULL
+		ORDER BY
+			e.start_time ASC;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(getUserUpcomingEventsFunc).Error; err != nil {
+		return err
+	}
+
+	getCreatedEventCountFunc := `
+	CREATE OR REPLACE FUNCTION get_created_event_count(p_user_id UUID)
+	RETURNS INT AS $$
+	DECLARE
+		event_count INT;
+	BEGIN
+		SELECT
+			COUNT(*)
+		INTO
+			event_count
+		FROM
+			events
+		WHERE
+			created_by = p_user_id
+			AND deleted_at IS NULL;
+			
+		RETURN event_count;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(getCreatedEventCountFunc).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
