@@ -12,7 +12,7 @@ import (
 type (
 	InvitationRepository interface {
 		Create(ctx context.Context, tx *gorm.DB, invitation entity.Invitation) (entity.Invitation, error)
-		GetInvitationByID(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) (entity.Invitation, error)
+		GetInvitationByID(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) ([]dto.InvitationDetailResponse, error)
 		GetInvitationByEvent(ctx context.Context, tx *gorm.DB, eventID uuid.UUID) ([]dto.InvitationResponse, error)
 		GetInvitationByUserId(ctx context.Context, tx *gorm.DB, userID uuid.UUID) ([]dto.InvitationResponse, error)
 		GetAllUserInvitations(ctx context.Context, tx *gorm.DB) ([]entity.Invitation, error)
@@ -36,17 +36,45 @@ func NewInvitationRepository(db *gorm.DB) InvitationRepository {
 	}
 }
 
-func (r *invitationRepository) GetInvitationByID(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) (entity.Invitation, error) {
+func (r *invitationRepository) GetInvitationByID(ctx context.Context, tx *gorm.DB, invitationID uuid.UUID) ([]dto.InvitationDetailResponse, error) {
 	if tx == nil {
 		tx = r.db
 	}
 
-	var invitation entity.Invitation
-	if err := tx.WithContext(ctx).Preload("Event").Preload("Users").Where("id = ?", invitationID).First(&invitation).Error; err != nil {
-		return entity.Invitation{}, err
+	var results []dto.InvitationDetailResponse
+	sql := `
+		SELECT
+			i.id AS invitation_id,
+			e.id AS event_id,
+			e.name AS event_name,
+			u.id AS user_id,
+			u.name AS user_name,
+			u.email AS user_email,
+			ui.invited_at,
+			ui.rsvp_status,
+			ui.rsvp_at,
+			ui.attended_at,
+			ui.qr_code,
+			creator.name AS creator_name
+		FROM
+			invitations i
+		JOIN
+			user_invitation ui ON i.id = ui.invitation_id
+		JOIN
+			users u ON ui.user_id = u.id
+		JOIN
+			events e ON i.event_id = e.id
+		JOIN
+			users creator ON e.created_by = creator.id
+		WHERE
+			i.id = ?;
+	`
+
+	if err := tx.WithContext(ctx).Raw(sql, invitationID).Scan(&results).Error; err != nil {
+		return nil, err
 	}
 
-	return invitation, nil
+	return results, nil
 }
 
 func (r *invitationRepository) GetInvitationByEvent(ctx context.Context, tx *gorm.DB, eventID uuid.UUID) ([]dto.InvitationResponse, error) {

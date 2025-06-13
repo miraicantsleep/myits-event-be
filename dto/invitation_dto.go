@@ -2,6 +2,9 @@ package dto
 
 import (
 	"errors"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -73,4 +76,19 @@ type InvitationResponse struct {
 	RsvpAt     string `json:"rsvp_at,omitempty"`
 	AttendedAt string `json:"attended_at,omitempty"`
 	QRCode     string `json:"qr_code,omitempty"`
+}
+
+type InvitationDetailResponse struct {
+	InvitationID uuid.UUID  `json:"invitation_id"`
+	EventID      uuid.UUID  `json:"event_id"`
+	EventName    string     `json:"event_name"`
+	UserID       uuid.UUID  `json:"user_id"`
+	UserName     string     `json:"user_name"`
+	UserEmail    string     `json:"user_email"`
+	InvitedAt    time.Time  `json:"invited_at"`
+	RSVPStatus   string     `json:"rsvp_status"`
+	RsvpAt       *time.Time `json:"rsvp_at"`
+	AttendedAt   *time.Time `json:"attended_at"`
+	QRCode       string     `json:"qr_code"`
+	CreatorName  string     `json:"creator_name"`
 }

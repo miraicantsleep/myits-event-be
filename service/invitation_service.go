@@ -181,33 +181,38 @@ func (s *invitationService) Create(ctx context.Context, req dto.CreateInvitation
 }
 
 func (s *invitationService) GetInvitationByID(ctx context.Context, invitationID string) ([]dto.InvitationResponse, error) {
-	// parse invitation ID
+	// Parse invitation ID
 	id, err := uuid.Parse(invitationID)
 	if err != nil {
 		return nil, err
 	}
-	// fetch with preloads
-	inv, err := s.invitationRepo.GetInvitationByID(ctx, nil, id)
+
+	// 1. Fetch the flat, detailed data from the repository in a single efficient query.
+	invitationDetails, err := s.invitationRepo.GetInvitationByID(ctx, nil, id)
 	if err != nil {
 		return nil, err
 	}
-	// assemble list response
-	resp := make([]dto.InvitationResponse, len(inv.Users))
-	now := time.Now().Format(time.RFC3339)
-	for i, u := range inv.Users {
-		userInv, err := s.invitationRepo.GetUserInvitation(ctx, nil, inv.ID, u.ID)
-		if err != nil {
-			return nil, err
-		}
+
+	// If no invitation is found, return an empty slice.
+	if len(invitationDetails) == 0 {
+		return []dto.InvitationResponse{}, nil
+	}
+
+	// 2. Assemble the response by mapping the flat details to the response DTO.
+	//    There is no N+1 query problem here; it's just a simple loop in Go.
+	resp := make([]dto.InvitationResponse, len(invitationDetails))
+	for i, detail := range invitationDetails {
 		resp[i] = dto.InvitationResponse{
-			ID:         inv.ID.String(),
-			EventName:  inv.Event.Name,
-			Name:       u.Name,
-			InvitedAt:  now,
-			RSVPStatus: entity.RSVPStatusPending,
-			QRCode:     userInv.QRCode,
+			ID:         detail.InvitationID.String(),
+			EventName:  detail.EventName,
+			Name:       detail.UserName,
+			InvitedAt:  detail.InvitedAt.Format(time.RFC3339),
+			RSVPStatus: detail.RSVPStatus,
+			RsvpAt:     utils.FormatTimePointer(detail.RsvpAt),
+			QRCode:     detail.QRCode,
 		}
 	}
+
 	return resp, nil
 }
 
@@ -244,33 +249,29 @@ func (s *invitationService) Delete(ctx context.Context, invitationID string) err
 	return nil
 }
 
-// ScanQRCode handles the logic for marking attendance via QR code
 func (s *invitationService) ScanQRCode(ctx context.Context, qrCode string) (dto.ScanQRCodeResponse, error) {
 	userInvitation, err := s.invitationRepo.GetUserInvitationByQRCode(ctx, nil, qrCode)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return dto.ScanQRCodeResponse{}, errors.New("QR code not found") // Or a more specific error type/dto
+			return dto.ScanQRCodeResponse{}, errors.New("QR code not found")
 		}
 		return dto.ScanQRCodeResponse{}, err // Other database error
 	}
 
 	if userInvitation.AttendedAt != nil {
-		return dto.ScanQRCodeResponse{}, errors.New("QR code already used") // Or a more specific error type/dto
+		return dto.ScanQRCodeResponse{}, errors.New("QR code already used")
 	}
 
 	now := time.Now()
 	userInvitation.AttendedAt = &now
-
 	updatedUserInvitation, err := s.invitationRepo.UpdateUserInvitation(ctx, nil, userInvitation)
 	if err != nil {
-		return dto.ScanQRCodeResponse{}, err // Error updating record
+		return dto.ScanQRCodeResponse{}, err // Error during update
 	}
 
-	// Fetch the main Invitation record to get EventID
-	inv, err := s.invitationRepo.GetInvitationByID(ctx, nil, updatedUserInvitation.InvitationID)
-	if err != nil {
-		// Log error, but proceed with minimal response if this secondary fetch fails
-		log.Printf("Error fetching invitation details for ScanQRCode response: %v", err)
+	var details dto.InvitationDetailResponse
+	if err := s.db.WithContext(ctx).Table("full_invitation_details").Where("qr_code = ?", qrCode).First(&details).Error; err != nil {
+		log.Printf("Error fetching full details for ScanQRCode response: %v", err)
 		return dto.ScanQRCodeResponse{
 			UserID:     updatedUserInvitation.UserID.String(),
 			AttendedAt: updatedUserInvitation.AttendedAt.Format(time.RFC3339),
@@ -278,24 +279,10 @@ func (s *invitationService) ScanQRCode(ctx context.Context, qrCode string) (dto.
 		}, nil
 	}
 
-	// Find the specific user in the invitation's users list
-	var userName string
-	for _, u := range inv.Users {
-		if u.ID == updatedUserInvitation.UserID {
-			userName = u.Name
-			break
-		}
-	}
-	if userName == "" {
-		log.Printf("Error: User with ID %s not found in invitation %s for ScanQRCode response", updatedUserInvitation.UserID, inv.ID)
-		// Attempt to get user directly if not found in the preloaded list (should not happen with correct preloading)
-		// For now, we'll leave userName blank if not found in the loaded data.
-	}
-
 	return dto.ScanQRCodeResponse{
-		UserID:     updatedUserInvitation.UserID.String(),
-		UserName:   userName,       // This might be empty if user details are not preloaded in GetInvitationByID's Users
-		EventName:  inv.Event.Name, // Relies on Event being preloaded in GetInvitationByID
+		UserID:     details.UserID.String(),
+		UserName:   details.UserName,
+		EventName:  details.EventName,
 		AttendedAt: updatedUserInvitation.AttendedAt.Format(time.RFC3339),
 		Message:    "Attendance marked successfully",
 	}, nil
