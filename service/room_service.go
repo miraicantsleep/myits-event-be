@@ -112,16 +112,11 @@ func (s *roomService) GetAllRoom(ctx context.Context) ([]dto.RoomResponse, error
 	}
 	var response []dto.RoomResponse
 	for _, room := range result {
-		// bisa di improve pake join
-		department, err := s.departmentRepository.GetDepartmentById(ctx, nil, room.DepartmentID.String())
-		if err != nil {
-			return nil, err
-		}
 		response = append(response, dto.RoomResponse{
-			ID:           room.ID.String(),
+			ID:           room.ID,
 			Name:         room.Name,
-			Department:   department.Name,
-			DepartmentID: room.DepartmentID.String(),
+			Department:   room.Department,
+			DepartmentID: room.DepartmentID,
 			Capacity:     room.Capacity,
 		})
 	}

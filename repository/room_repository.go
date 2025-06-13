@@ -14,7 +14,7 @@ type (
 		Create(ctx context.Context, room entity.Room) (entity.Room, error)
 		GetRoomByID(ctx context.Context, id string) (entity.Room, error)
 		GetRoomByName(ctx context.Context, name string) (entity.Room, error)
-		GetAllRoom(ctx context.Context) ([]entity.Room, error)
+		GetAllRoom(ctx context.Context) ([]dto.RoomResponse, error)
 		Update(ctx context.Context, id string, room entity.Room) (entity.Room, error)
 		Delete(ctx context.Context, id string) error
 	}
@@ -76,13 +76,13 @@ func (r *roomRepository) GetRoomByName(ctx context.Context, name string) (entity
 	return room, nil
 }
 
-func (r *roomRepository) GetAllRoom(ctx context.Context) ([]entity.Room, error) {
+func (r *roomRepository) GetAllRoom(ctx context.Context) ([]dto.RoomResponse, error) {
 	tx := r.db
 	if tx == nil {
 		return nil, dto.ErrGetAllRoom
 	}
-	var rooms []entity.Room
-	if err := tx.WithContext(ctx).Preload("Department").Find(&rooms).Error; err != nil {
+	var rooms []dto.RoomResponse
+	if err := tx.WithContext(ctx).Table("vw_room_details").Find(&rooms).Error; err != nil {
 		return nil, err
 	}
 	return rooms, nil

@@ -322,5 +322,27 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	roomDetailsView := `
+	CREATE OR REPLACE VIEW vw_room_details AS
+	SELECT
+		r.id,
+		r.name,
+		r.capacity,
+		r.department_id,
+		d.name AS department_name,
+		r.created_at,
+		r.updated_at,
+		r.deleted_at
+	FROM
+		rooms r
+	LEFT JOIN
+		departments d ON r.department_id = d.id
+	WHERE
+		r.deleted_at IS NULL;
+	`
+	if err := db.Exec(roomDetailsView).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
