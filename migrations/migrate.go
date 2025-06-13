@@ -172,5 +172,58 @@ func Migrate(db *gorm.DB) error {
 	if err := db.Exec(userAttendanceView).Error; err != nil {
 		return err
 	}
+
+	// Trigger to prevent modification of approved/rejected bookings
+	preventBookingModificationFunc := `
+	CREATE OR REPLACE FUNCTION prevent_booking_modification()
+	RETURNS TRIGGER AS $$
+	BEGIN
+	    IF OLD.status IN ('approved', 'rejected') THEN
+	        RAISE EXCEPTION 'Cannot modify a booking request that has already been approved or rejected.';
+	    END IF;
+	    RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(preventBookingModificationFunc).Error; err != nil {
+		return err
+	}
+
+	preventBookingModificationTrigger := `
+	DROP TRIGGER IF EXISTS trg_prevent_booking_modification ON booking_requests;
+	CREATE TRIGGER trg_prevent_booking_modification
+	BEFORE UPDATE ON booking_requests
+	FOR EACH ROW EXECUTE FUNCTION prevent_booking_modification();
+	`
+	if err := db.Exec(preventBookingModificationTrigger).Error; err != nil {
+		return err
+	}
+
+	// Trigger to prevent deletion of events with active bookings
+	preventEventDeletionFunc := `
+	CREATE OR REPLACE FUNCTION prevent_event_deletion_with_bookings()
+	RETURNS TRIGGER AS $$
+	BEGIN
+	    IF EXISTS (SELECT 1 FROM booking_requests WHERE event_id = OLD.id AND status IN ('pending', 'approved') AND deleted_at IS NULL) THEN
+	        RAISE EXCEPTION 'Cannot delete event: It has active booking requests.';
+	    END IF;
+	    RETURN OLD;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(preventEventDeletionFunc).Error; err != nil {
+		return err
+	}
+
+	preventEventDeletionTrigger := `
+	DROP TRIGGER IF EXISTS trg_prevent_event_deletion_with_bookings ON events;
+	CREATE TRIGGER trg_prevent_event_deletion_with_bookings
+	BEFORE DELETE ON events
+	FOR EACH ROW EXECUTE FUNCTION prevent_event_deletion_with_bookings();
+	`
+	if err := db.Exec(preventEventDeletionTrigger).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
