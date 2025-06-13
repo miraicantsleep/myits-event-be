@@ -96,11 +96,29 @@ func (r *invitationRepository) Create(ctx context.Context, tx *gorm.DB, invitati
 		return entity.Invitation{}, err
 	}
 
-	if err := tx.WithContext(ctx).Preload("Users").Preload("Event").First(&invitation, "id = ?", invitation.ID).Error; err != nil {
+	// Fetch the created invitation with its related Event and Users using Joins
+	var createdInvitation entity.Invitation
+	if err := tx.WithContext(ctx).
+		Table("invitations").
+		Select("invitations.*, events.*").
+		Joins("LEFT JOIN events ON events.id = invitations.event_id").
+		Where("invitations.id = ?", invitation.ID).
+		First(&createdInvitation).Error; err != nil {
 		return entity.Invitation{}, err
 	}
 
-	return invitation, nil
+	// Now fetch the associated users for the invitation
+	var users []entity.User
+	if err := tx.WithContext(ctx).
+		Table("users").
+		Joins("JOIN user_invitation ON user_invitation.user_id = users.id").
+		Where("user_invitation.invitation_id = ?", invitation.ID).
+		Find(&users).Error; err != nil {
+		return entity.Invitation{}, err
+	}
+	createdInvitation.Users = users
+
+	return createdInvitation, nil
 }
 
 func (r *invitationRepository) Update(ctx context.Context, tx *gorm.DB, invitation entity.Invitation) (entity.Invitation, error) {
@@ -200,22 +218,9 @@ func (r *invitationRepository) GetInvitationByUserId(ctx context.Context, tx *go
 	}
 	var resp []dto.InvitationResponse
 	err := tx.WithContext(ctx).
-		Table("invitations").
-		Select(
-			"invitations.id AS id",
-			"events.name AS event_name",
-			"events.id AS event_id",
-			"events.start_time AS event_start_time",
-			"events.end_time AS event_end_time",
-			"user_invitation.invited_at AS invited_at",
-			"user_invitation.rsvp_status AS rsvp_status",
-			"user_invitation.rsvp_at AS rsvp_at",
-			"user_invitation.attended_at AS attended_at",
-			"user_invitation.qr_code AS qr_code",
-		).
-		Joins("JOIN events ON events.id = invitations.event_id").
-		Joins("JOIN user_invitation ON user_invitation.invitation_id = invitations.id").
-		Where("user_invitation.user_id = ?", userID).
+		Table("full_invitation_details").
+		Where("user_id = ?", userID).
 		Scan(&resp).Error
+
 	return resp, err
 }

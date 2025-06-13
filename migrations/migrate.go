@@ -70,5 +70,55 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	createEventDetailsView := `
+	CREATE OR REPLACE VIEW event_details AS
+		SELECT
+			e.id,
+			e.name,
+			e.description,
+			e.start_time,
+			e.end_time,
+			e.event_type,
+			e.created_by AS creator_id,
+			u.name AS creator_name,
+			e.created_at,
+			e.updated_at,
+			e.deleted_at
+		FROM
+			events e
+		LEFT JOIN
+			users u ON e.created_by = u.id;
+	`
+	if err := db.Exec(createEventDetailsView).Error; err != nil {
+		return err
+	}
+
+	fullInvitationDetailsView := `
+	CREATE OR REPLACE VIEW full_invitation_details AS
+	SELECT
+		i.id AS id, 
+		e.id AS event_id,
+		e.name AS event_name,
+		u.id AS user_id,
+		u.name AS user_name,
+		u.email AS user_email,
+		ui.invited_at,
+		ui.rsvp_status,
+		ui.rsvp_at,
+		ui.attended_at,
+		ui.qr_code
+	FROM
+		invitations i
+	JOIN
+		user_invitation ui ON i.id = ui.invitation_id
+	JOIN
+		users u ON ui.user_id = u.id
+	JOIN
+		events e ON i.event_id = e.id;
+	`
+	if err := db.Exec(fullInvitationDetailsView).Error; err != nil {
+		return err
+	}
+
 	return nil
 }

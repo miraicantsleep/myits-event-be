@@ -105,10 +105,8 @@ func (r *eventRepository) GetEventByUserId(ctx context.Context, tx *gorm.DB, use
 	var events []entity.Event
 
 	if err := tx.WithContext(ctx).
-		Table("events").
-		Select("events.*, users.name as creator_name").
-		Joins("LEFT JOIN users ON events.created_by = users.id").
-		Where("events.created_by = ?", userId).
+		Table("event_views").
+		Where("created_by = ?", userId).
 		Find(&events).Error; err != nil {
 		return nil, err
 	}
@@ -119,21 +117,12 @@ func (r *eventRepository) GetEventById(ctx context.Context, tx *gorm.DB, eventId
 	if tx == nil {
 		tx = r.db
 	}
-
 	var event entity.Event
-
-	if err := tx.WithContext(ctx).
-		Table("events").
-		Select("events.*, users.name as creator_name").
-		Joins("LEFT JOIN users ON events.created_by = users.id").
-		Where("events.id = ?", eventId).
-		First(&event).Error; err != nil {
+	if err := tx.WithContext(ctx).Table("event_details").Where("id = ?", eventId).First(&event).Error; err != nil {
 		return entity.Event{}, err
 	}
-
 	return event, nil
 }
-
 func (r *eventRepository) Update(ctx context.Context, tx *gorm.DB, event entity.Event) (entity.Event, error) {
 	if tx == nil {
 		tx = r.db
