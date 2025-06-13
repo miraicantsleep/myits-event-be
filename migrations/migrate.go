@@ -225,5 +225,77 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	getEventAttendeesFunc := `
+	CREATE OR REPLACE FUNCTION get_event_attendees(p_event_id uuid)
+	RETURNS TABLE (
+		user_id uuid,
+		user_name character varying,
+		user_email character varying,
+		attended_at timestamp
+	) AS $$
+	BEGIN
+		RETURN QUERY
+		SELECT
+			u.id,
+			u.name,
+			u.email,
+			ui.attended_at
+		FROM
+			user_invitation ui
+		JOIN
+			users u ON ui.user_id = u.id
+		JOIN
+			invitations i ON ui.invitation_id = i.id
+		WHERE
+			i.event_id = p_event_id
+			AND ui.attended_at IS NOT NULL
+			AND u.deleted_at IS NULL;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(getEventAttendeesFunc).Error; err != nil {
+		return err
+	}
+
+	getPendingBookingsFunc := `
+	CREATE OR REPLACE FUNCTION get_pending_booking_requests_for_department(p_department_id uuid)
+	RETURNS TABLE (
+		booking_request_id uuid,
+		event_name character varying,
+		event_start_time timestamp,
+		event_end_time timestamp,
+		room_name character varying,
+		requesting_ormawa character varying
+	) AS $$
+	BEGIN
+		RETURN QUERY
+		SELECT
+			br.id,
+			e.name,
+			e.start_time,
+			e.end_time,
+			r.name,
+			u.name
+		FROM
+			booking_requests br
+		JOIN
+			events e ON br.event_id = e.id
+		JOIN
+			users u ON e.created_by = u.id
+		JOIN
+			booking_request_room brr ON br.id = brr.booking_request_id
+		JOIN
+			rooms r ON brr.room_id = r.id
+		WHERE
+			r.department_id = p_department_id
+			AND br.status = 'pending'
+			AND br.deleted_at IS NULL;
+	END;
+	$$ LANGUAGE plpgsql;
+	`
+	if err := db.Exec(getPendingBookingsFunc).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
