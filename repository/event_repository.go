@@ -18,6 +18,7 @@ type (
 		CheckEventExist(ctx context.Context, tx *gorm.DB, name string) (bool, error)
 		GetEventByUserId(ctx context.Context, tx *gorm.DB, userId string) ([]entity.Event, error)
 		GetEventAttendees(ctx context.Context, tx *gorm.DB, eventId string) ([]dto.UserAttendanceResponse, error)
+		GetAllUserAttendances(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllUserAttendanceRepositoryResponse, error)
 	}
 
 	eventRepository struct {
@@ -175,4 +176,41 @@ func (r *eventRepository) GetEventAttendees(ctx context.Context, tx *gorm.DB, ev
 		Where("event_id = ?", eventId).
 		Find(&attendees).Error
 	return attendees, err
+}
+
+func (r *eventRepository) GetAllUserAttendances(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllUserAttendanceRepositoryResponse, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var attendees []dto.UserAttendanceResponse
+	var count int64
+
+	req.Default()
+
+	query := tx.WithContext(ctx).Table("user_attendance_view")
+
+	if req.Search != "" {
+		// Pencarian berdasarkan nama user atau nama event
+		query = query.Where("user_name ILIKE ? OR event_name ILIKE ?", "%"+req.Search+"%", "%"+req.Search+"%")
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return dto.GetAllUserAttendanceRepositoryResponse{}, err
+	}
+
+	if err := query.Scopes(Paginate(req)).Find(&attendees).Error; err != nil {
+		return dto.GetAllUserAttendanceRepositoryResponse{}, err
+	}
+
+	totalPage := TotalPage(count, int64(req.PerPage))
+
+	return dto.GetAllUserAttendanceRepositoryResponse{
+		Attendances: attendees,
+		PaginationResponse: dto.PaginationResponse{
+			Page:    req.Page,
+			PerPage: req.PerPage,
+			Count:   count,
+			MaxPage: totalPage,
+		},
+	}, nil
 }

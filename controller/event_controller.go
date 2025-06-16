@@ -17,6 +17,7 @@ type (
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
 		GetEventAttendees(ctx *gin.Context)
+		GetAllUserAttendances(ctx *gin.Context)
 	}
 
 	eventController struct {
@@ -151,4 +152,30 @@ func (c *eventController) GetEventAttendees(ctx *gin.Context) {
 
 	res := utils.BuildResponseSuccess("Successfully fetched event attendees", attendees)
 	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *eventController) GetAllUserAttendances(ctx *gin.Context) {
+	var req dto.PaginationRequest
+	// Gunakan ShouldBindQuery untuk GET request
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	result, err := c.eventService.GetAllUserAttendances(ctx.Request.Context(), req)
+	if err != nil {
+		res := utils.BuildResponseFailed("Failed to get all user attendances", err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	// Bangun respons dengan metadata untuk paginasi
+	resp := utils.Response{
+		Status:  true,
+		Message: "Successfully fetched all user attendances",
+		Data:    result.Data,
+		Meta:    result.PaginationResponse,
+	}
+	ctx.JSON(http.StatusOK, resp)
 }

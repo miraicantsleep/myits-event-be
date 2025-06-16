@@ -22,6 +22,7 @@ type (
 		Update(ctx context.Context, req dto.EventUpdateRequest, eventId string) (dto.EventResponse, error)
 		Delete(ctx context.Context, eventId string) error
 		GetEventAttendees(ctx context.Context, eventId string) ([]dto.UserAttendanceResponse, error)
+		GetAllUserAttendances(ctx context.Context, req dto.PaginationRequest) (dto.UserAttendancePaginationResponse, error)
 	}
 	eventService struct {
 		eventRepo  repository.EventRepository
@@ -260,4 +261,16 @@ func (s *eventService) GetEventAttendees(ctx context.Context, eventId string) ([
 		return nil, err
 	}
 	return attendees, nil
+}
+
+func (s *eventService) GetAllUserAttendances(ctx context.Context, req dto.PaginationRequest) (dto.UserAttendancePaginationResponse, error) {
+	result, err := s.eventRepo.GetAllUserAttendances(ctx, nil, req)
+	if err != nil {
+		return dto.UserAttendancePaginationResponse{}, err
+	}
+
+	return dto.UserAttendancePaginationResponse{
+		Data:               result.Attendances,
+		PaginationResponse: result.PaginationResponse,
+	}, nil
 }

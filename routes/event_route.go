@@ -22,5 +22,6 @@ func Event(route *gin.Engine, injector *do.Injector) {
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Create)
 		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Update)
 		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Delete)
+		routes.GET("/attendance/all", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin"), eventController.GetAllUserAttendances)
 	}
 }

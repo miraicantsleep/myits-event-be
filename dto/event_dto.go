@@ -77,4 +77,12 @@ type (
 		EventName  string    `json:"event_name" gorm:"column:event_name"`
 		AttendedAt time.Time `json:"attended_at" gorm:"column:attended_at"`
 	}
+	GetAllUserAttendanceRepositoryResponse struct {
+		Attendances []UserAttendanceResponse `json:"attendances"`
+		PaginationResponse
+	}
+	UserAttendancePaginationResponse struct {
+		Data []UserAttendanceResponse `json:"data"`
+		PaginationResponse
+	}
 )
