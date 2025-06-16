@@ -121,6 +121,7 @@ func (s *eventService) GetAllEventWithPagination(ctx context.Context, req dto.Pa
 				End_Time:    event.End_Time.Format(time.RFC3339),
 				Created_By:  event.Creator_Name,
 				Event_Type:  event.Event_Type,
+				Duration:    event.DurationInMinutes,
 			})
 		}
 		return dto.EventPaginationResponse{
@@ -149,6 +150,7 @@ func (s *eventService) GetAllEventWithPagination(ctx context.Context, req dto.Pa
 			End_Time:    event.End_Time,
 			Created_By:  event.Created_By,
 			Event_Type:  event.Event_Type,
+			Duration:    event.Duration,
 		})
 	}
 

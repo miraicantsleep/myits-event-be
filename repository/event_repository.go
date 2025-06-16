@@ -83,6 +83,7 @@ func (r *eventRepository) GetAllEventWithPagination(ctx context.Context, tx *gor
 			End_Time:    event.End_Time.String(),
 			Created_By:  event.Creator_Name,
 			Event_Type:  event.Event_Type,
+			Duration:    event.DurationInMinutes,
 		}
 	}
 

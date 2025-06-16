@@ -63,6 +63,7 @@ type (
 		End_Time    string `json:"end_time"`
 		Created_By  string `json:"created_by"`
 		Event_Type  string `json:"event_type"`
+		Duration    int    `json:"duration"`
 	}
 
 	EventPaginationResponse struct {
