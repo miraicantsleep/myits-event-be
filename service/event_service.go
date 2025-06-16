@@ -21,6 +21,7 @@ type (
 		GetEventById(ctx context.Context, eventId string) (dto.EventResponse, error)
 		Update(ctx context.Context, req dto.EventUpdateRequest, eventId string) (dto.EventResponse, error)
 		Delete(ctx context.Context, eventId string) error
+		GetEventAttendees(ctx context.Context, eventId string) ([]dto.UserAttendanceResponse, error)
 	}
 	eventService struct {
 		eventRepo  repository.EventRepository
@@ -251,4 +252,12 @@ func (s *eventService) Delete(ctx context.Context, eventId string) error {
 	}
 
 	return nil
+}
+
+func (s *eventService) GetEventAttendees(ctx context.Context, eventId string) ([]dto.UserAttendanceResponse, error) {
+	attendees, err := s.eventRepo.GetEventAttendees(ctx, nil, eventId)
+	if err != nil {
+		return nil, err
+	}
+	return attendees, nil
 }

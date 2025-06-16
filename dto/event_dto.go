@@ -1,6 +1,9 @@
 package dto
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 const (
 	EVENT_TYPE_ONLINE  = "online"
@@ -65,5 +68,13 @@ type (
 	EventPaginationResponse struct {
 		Data []EventResponse `json:"data"`
 		PaginationResponse
+	}
+
+	UserAttendanceResponse struct {
+		UserID     string    `json:"user_id" gorm:"column:user_id"`
+		UserName   string    `json:"user_name" gorm:"column:user_name"`
+		EventID    string    `json:"event_id" gorm:"column:event_id"`
+		EventName  string    `json:"event_name" gorm:"column:event_name"`
+		AttendedAt time.Time `json:"attended_at" gorm:"column:attended_at"`
 	}
 )

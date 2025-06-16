@@ -17,6 +17,7 @@ type (
 		Delete(ctx context.Context, tx *gorm.DB, eventId string) error
 		CheckEventExist(ctx context.Context, tx *gorm.DB, name string) (bool, error)
 		GetEventByUserId(ctx context.Context, tx *gorm.DB, userId string) ([]entity.Event, error)
+		GetEventAttendees(ctx context.Context, tx *gorm.DB, eventId string) ([]dto.UserAttendanceResponse, error)
 	}
 
 	eventRepository struct {
@@ -162,4 +163,16 @@ func (r *eventRepository) CheckEventExist(ctx context.Context, tx *gorm.DB, name
 	}
 
 	return count > 0, nil
+}
+
+func (r *eventRepository) GetEventAttendees(ctx context.Context, tx *gorm.DB, eventId string) ([]dto.UserAttendanceResponse, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var attendees []dto.UserAttendanceResponse
+	err := tx.WithContext(ctx).
+		Table("user_attendance_view").
+		Where("event_id = ?", eventId).
+		Find(&attendees).Error
+	return attendees, err
 }

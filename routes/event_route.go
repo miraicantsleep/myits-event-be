@@ -18,6 +18,7 @@ func Event(route *gin.Engine, injector *do.Injector) {
 		// Event
 		routes.GET("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin", "departemen"), eventController.GetAllEvent)
 		routes.GET("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.GetEventByID)
+		routes.GET("/:id/attendees", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.GetEventAttendees)
 		routes.POST("/", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Create)
 		routes.PATCH("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Update)
 		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), eventController.Delete)

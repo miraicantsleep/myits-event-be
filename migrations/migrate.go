@@ -67,6 +67,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS event_details;")
 	createEventDetailsView := `
 	CREATE OR REPLACE VIEW event_details AS
 		SELECT
@@ -91,6 +92,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS full_invitation_details;")
 	fullInvitationDetailsView := `
 	CREATE OR REPLACE VIEW full_invitation_details AS
 	SELECT
@@ -122,6 +124,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS ormawa_events_view;")
 	ormawaEventsView := `
 	-- Events created by "Ormawa" View
 	CREATE OR REPLACE VIEW ormawa_events_view AS
@@ -148,6 +151,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS user_attendance_view;")
 	userAttendanceView := `
 	-- User Attendance View
 	CREATE OR REPLACE VIEW user_attendance_view AS
@@ -298,6 +302,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS vw_booking_with_rooms;")
 	createBookingWithRoomsView := `
 	CREATE OR REPLACE VIEW vw_booking_with_rooms AS
 	SELECT
@@ -323,6 +328,7 @@ func Migrate(db *gorm.DB) error {
 		return err
 	}
 
+	db.Exec("DROP VIEW IF EXISTS vw_room_details;")
 	roomDetailsView := `
 	CREATE OR REPLACE VIEW vw_room_details AS
 	SELECT

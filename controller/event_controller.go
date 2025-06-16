@@ -16,6 +16,7 @@ type (
 		GetEventByID(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
+		GetEventAttendees(ctx *gin.Context)
 	}
 
 	eventController struct {
@@ -130,5 +131,24 @@ func (c *eventController) Delete(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_DELETE_EVENT, nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *eventController) GetEventAttendees(ctx *gin.Context) {
+	eventId := ctx.Param("id")
+	if eventId == "" {
+		res := utils.BuildResponseFailed("Event ID is required", "Event ID is required", nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	attendees, err := c.eventService.GetEventAttendees(ctx.Request.Context(), eventId)
+	if err != nil {
+		res := utils.BuildResponseFailed("Failed to get event attendees", err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess("Successfully fetched event attendees", attendees)
 	ctx.JSON(http.StatusOK, res)
 }
