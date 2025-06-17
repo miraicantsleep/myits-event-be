@@ -21,6 +21,7 @@ type (
 		DeleteBookingRequest(ctx context.Context, id string) error
 		ApproveBookingRequest(ctx context.Context, id string) error
 		RejectBookingRequest(ctx context.Context, id string) error
+		GetAllBookingRequestsWithCapacity(ctx context.Context) ([]dto.BookingRequestWithCapacityResponse, error)
 	}
 
 	bookingRequestService struct {
@@ -289,4 +290,8 @@ func (s *bookingRequestService) RejectBookingRequest(ctx context.Context, id str
 		return err
 	}
 	return s.bookingRequestRepo.UpdateBookingRequestStatus(ctx, nil, bookingRequestID, "rejected")
+}
+
+func (s *bookingRequestService) GetAllBookingRequestsWithCapacity(ctx context.Context) ([]dto.BookingRequestWithCapacityResponse, error) {
+	return s.bookingRequestRepo.GetAllBookingRequestsWithCapacity(ctx, nil)
 }

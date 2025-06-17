@@ -17,6 +17,7 @@ type BookingRequestController interface {
 	Delete(ctx *gin.Context)
 	Approve(ctx *gin.Context)
 	Reject(ctx *gin.Context)
+	GetAllWithCapacity(ctx *gin.Context)
 }
 
 type bookingRequestController struct {
@@ -170,5 +171,17 @@ func (c *bookingRequestController) Reject(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_REJECT_BOOKING_REQUEST, nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *bookingRequestController) GetAllWithCapacity(ctx *gin.Context) {
+	results, err := c.bookingRequestService.GetAllBookingRequestsWithCapacity(ctx.Request.Context())
+	if err != nil {
+		res := utils.BuildResponseFailed("Failed get all booking requests with capacity", err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess("Success get all booking requests with capacity", results)
 	ctx.JSON(http.StatusOK, res)
 }

@@ -66,6 +66,15 @@ type BookingDetailResponse struct {
 	Rooms         []RoomInfo `json:"rooms"` // The array of rooms
 }
 
+type BookingRequestWithCapacityResponse struct {
+	BookingRequestID uuid.UUID `json:"booking_request_id"`
+	Status           string    `json:"status"`
+	EventName        string    `json:"event_name"`
+	RoomName         string    `json:"room_name"`
+	RoomCapacity     int       `json:"room_capacity"`
+	RequestedAt      string    `json:"requested_at"`
+}
+
 // This struct represents a single room inside the BookingDetailResponse.
 type RoomInfo struct {
 	RoomID   uuid.UUID `json:"room_id"`

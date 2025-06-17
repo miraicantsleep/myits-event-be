@@ -22,5 +22,6 @@ func BookingRequest(route *gin.Engine, injector *do.Injector) {
 		routes.DELETE("/:id", middleware.Authenticate(jwtService), middleware.RoleMiddleware("ormawa", "admin"), bookingRequestController.Delete)
 		routes.PATCH("/:id/approve", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Approve)
 		routes.PATCH("/:id/reject", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.Reject)
+		routes.GET("/with-capacity", middleware.Authenticate(jwtService), middleware.RoleMiddleware("admin", "departemen"), bookingRequestController.GetAllWithCapacity)
 	}
 }
